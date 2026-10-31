@@ -44,15 +44,15 @@ const envSchema = z.object({
   ADMIN_NOTIFICATION_EMAIL: z.string().optional().default(process.env.ADMIN_NOTIFICATION_EMAIL || ''),
 });
 
-const parsed = envSchema.safeParse(process.env);
-
-if (!parsed.success) {
-  console.error('❌ FATAL: Invalid backend environment variables:');
-  console.error(JSON.stringify(parsed.error.format(), null, 2));
+let parsedData: z.infer<typeof envSchema>;
+try {
+  parsedData = envSchema.parse(process.env);
+} catch (error) {
+  console.error('❌ FATAL: Invalid backend environment variables:', error);
   process.exit(1);
 }
 
-export const env = parsed.data;
+export const env = parsedData;
 
 if (!isTest) {
   if (env.RAZORPAY_KEY_ID.includes('placeholder')) {
