@@ -1,31 +1,148 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../utils/formatters';
-import { Package, Search, Truck, CheckCircle2, Clock, MapPin, ArrowRight } from 'lucide-react';
+import { Package, Search, Truck, CheckCircle2, Clock, MapPin, ArrowRight, Loader2 } from 'lucide-react';
 
 export const OrderTrackingPage: React.FC = () => {
   const { routeParams, orders, navigate } = useStore();
-  const [searchId, setSearchId] = useState(routeParams.orderId || (orders[0]?.id || 'IF-89241'));
+  const [searchId, setSearchId] = useState(routeParams.orderId || (orders[0]?.id || ''));
   const [searchedOrder, setSearchedOrder] = useState<any>(
-    orders.find((o) => o.id === searchId) || orders[0]
+    orders.find((o) => o.id === searchId || o.orderNumber === searchId) || orders[0] || null
   );
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const found = orders.find(
-      (o) =>
-        o.id.toLowerCase() === searchId.trim().toLowerCase() ||
-        o.trackingNumber.toLowerCase() === searchId.trim().toLowerCase()
-    );
-    setSearchedOrder(found || null);
+  useEffect(() => {
+    if (routeParams.orderId) {
+      setSearchId(routeParams.orderId);
+      const local = orders.find((o) => o.id === routeParams.orderId || o.orderNumber === routeParams.orderId);
+      if (local) {
+        setSearchedOrder(local);
+      } else {
+        performDbLookup(routeParams.orderId);
+      }
+    }
+  }, [routeParams.orderId, orders]);
+
+  const performDbLookup = async (query: string) => {
+    const clean = query.trim();
+    if (!clean) return;
+    setIsSearching(true);
+
+    try {
+      // Look up by id or order_number
+      let builder = supabase.from('orders').select('*, order_items(*)');
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean);
+      if (isUuid) {
+        builder = builder.or(`id.eq.${clean},order_number.eq.${clean}`);
+      } else {
+        builder = builder.eq('order_number', clean);
+      }
+
+      const { data, error } = await builder.maybeSingle();
+
+      if (!error && data) {
+        setSearchedOrder({
+          id: data.id,
+          orderNumber: data.order_number,
+          date: new Date(data.created_at).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          }),
+          items: (data.order_items || []).map((i: any) => ({
+            id: i.id,
+            product: {
+              id: i.product_id,
+              name: i.product_name,
+              brand: i.product_brand,
+              price: i.unit_price_paise / 100,
+            },
+            quantity: i.quantity,
+            selectedFlavour: i.selected_flavour,
+            selectedSize: i.selected_size,
+          })),
+          subtotal: data.subtotal_paise / 100,
+          discount: data.discount_paise / 100,
+          shipping: data.shipping_paise / 100,
+          total: data.total_paise / 100,
+          status: data.status,
+          trackingNumber:
+            data.tracking_number ||
+            (data.status === 'processing' || data.status === 'paid'
+              ? 'Pending Logistics Assignment'
+              : 'N/A'),
+          shippingAddress: data.shipping_address,
+          paymentMethod:
+            data.payment_method === 'stripe' || data.payment_method === 'razorpay'
+              ? 'Online Payment (Razorpay)'
+              : 'Cash on Delivery (COD)',
+          paymentStatus: data.payment_status === 'paid' ? 'Paid' : data.payment_status,
+        });
+      } else {
+        setSearchedOrder(null);
+      }
+    } catch {
+      setSearchedOrder(null);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = searchId.trim();
+    if (!clean) return;
+
+    const found = orders.find(
+      (o) =>
+        o.id.toLowerCase() === clean.toLowerCase() ||
+        (o.orderNumber && o.orderNumber.toLowerCase() === clean.toLowerCase()) ||
+        o.trackingNumber.toLowerCase() === clean.toLowerCase()
+    );
+
+    if (found) {
+      setSearchedOrder(found);
+    } else {
+      await performDbLookup(clean);
+    }
+  };
+
+  const currentStatus = (searchedOrder?.status || 'pending').toLowerCase();
+  const isConfirmed = ['confirmed', 'shipped', 'delivered'].includes(currentStatus);
+  const isShipped = ['shipped', 'delivered'].includes(currentStatus);
+  const isDelivered = currentStatus === 'delivered';
+
   const steps = [
-    { title: 'Order Placed', desc: 'Received & verified', completed: true },
-    { title: 'Batch Tested & Packed', desc: 'Verified security hologram', completed: true },
-    { title: 'Dispatched with Courier', desc: 'Delhivery Express Transit', completed: true },
-    { title: 'Out for Delivery', desc: 'Arriving at local hub', completed: false },
-    { title: 'Delivered', desc: 'Signature verified', completed: false },
+    {
+      title: 'Order Placed',
+      desc: 'Received & In Process',
+      completed: true,
+    },
+    {
+      title: 'Admin Confirmed',
+      desc: isConfirmed
+        ? searchedOrder?.estimatedDelivery
+          ? `Delivery by ${searchedOrder.estimatedDelivery}`
+          : 'Approved for 3-Day Delivery'
+        : 'Awaiting Store Review',
+      completed: isConfirmed,
+    },
+    {
+      title: 'Dispatched with Courier',
+      desc: isShipped ? 'In Transit with Express Logistics' : 'Preparing dispatch',
+      completed: isShipped,
+    },
+    {
+      title: 'Out for Delivery',
+      desc: isDelivered ? 'Delivered successfully' : isShipped ? 'At local delivery station' : 'Upcoming',
+      completed: isShipped || isDelivered,
+    },
+    {
+      title: 'Delivered',
+      desc: isDelivered ? 'Handed over to customer' : 'Pending doorstep delivery',
+      completed: isDelivered,
+    },
   ];
 
   return (

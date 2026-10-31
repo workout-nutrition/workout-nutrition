@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   servings INTEGER NOT NULL DEFAULT 1,
   flavours TEXT[] NOT NULL DEFAULT '{}',
   sizes TEXT[] NOT NULL DEFAULT '{}',
+  size_variants JSONB DEFAULT '[]'::jsonb,
   stock INTEGER NOT NULL DEFAULT 0,
   is_best_seller BOOLEAN NOT NULL DEFAULT false,
   is_featured BOOLEAN NOT NULL DEFAULT false,

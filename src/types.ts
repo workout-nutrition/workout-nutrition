@@ -11,23 +11,53 @@ export type GoalType =
   | 'general-wellness';
 
 export type CategoryType =
+  | 'BCAA'
+  | 'BCAA & EAA'
+  | 'Breakfast'
+  | 'Creatine'
+  | 'EAA'
+  | 'Fat Burner'
+  | 'Fish Oil'
+  | 'Gaining Formula'
+  | 'Glutamine'
+  | 'L- Carnitine'
+  | 'L-Citrulline'
+  | 'Liver Support'
+  | 'Mass Gainer'
+  | 'Multivitamin'
+  | 'Multivitamins'
+  | 'Others'
+  | 'Peanut Butter'
+  | 'Pre Workout'
+  | 'Pre Workouts'
+  | 'TAN'
+  | 'TEST Booster'
   | 'Whey Protein'
   | 'Whey Isolate'
-  | 'Creatine'
-  | 'Pre Workout'
-  | 'Mass Gainer'
-  | 'BCAA & EAA'
-  | 'Multivitamins'
-  | 'Fish Oil'
-  | 'Fat Burner'
-  | 'Health & Wellness'
-  | 'Glutamine & Aminos'
-  | 'Carbohydrates & Recovery';
+  | 'ZMA';
+
 
 export interface NutritionFact {
   nutrient: string;
   amountPerServing: string;
   dailyValue?: string;
+}
+
+export interface SizeVariant {
+  size: string;
+  price: number;
+  originalPrice: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  productId?: string;
+  flavour: string;
+  weight: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  isActive: boolean;
 }
 
 export interface Product {
@@ -49,6 +79,8 @@ export interface Product {
   servings: number;
   flavours: string[];
   sizes: string[];
+  sizeVariants?: SizeVariant[]; // Optional per-size pricing (legacy)
+  variants?: ProductVariant[]; // Dynamic flavour-based weight variants with individual price & stock
   stock: number;
   isBestSeller?: boolean;
   isFeatured?: boolean;
@@ -83,18 +115,21 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedFlavour: string;
-  selectedSize: string;
+  selectedSize: string; // weight / size
+  variantId?: string;
+  variantPrice?: number; // individual variant price
 }
 
 export interface Order {
   id: string;
+  orderNumber?: string;
   date: string;
   items: CartItem[];
   subtotal: number;
   discount: number;
   shipping: number;
   total: number;
-  status: 'Processing' | 'Verified' | 'Dispatched' | 'In Transit' | 'Out for Delivery' | 'Delivered';
+  status: string;
   trackingNumber: string;
   shippingAddress: {
     fullName: string;
@@ -105,7 +140,9 @@ export interface Order {
     pinCode: string;
   };
   paymentMethod: string;
-  paymentStatus: 'Paid' | 'Pending COD';
+  paymentStatus: string;
+  notes?: string;
+  estimatedDelivery?: string;
 }
 
 export interface Review {

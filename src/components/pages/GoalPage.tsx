@@ -4,18 +4,50 @@ import { GOALS } from '../../data/goals';
 import { Product } from '../../types';
 import { ProductCard } from '../common/ProductCard';
 import { Target, Lightbulb } from 'lucide-react';
+import { usePageSEO } from '../../utils/seo';
 
 const normalizeCategory = (value?: string): string =>
   (value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-const GOAL_PRODUCT_CATEGORIES: Record<string, string[]> = {
-  'build-muscle': ['Whey Protein', 'Whey Isolate', 'Creatine'],
-  'gain-weight': ['Mass Gainer'],
-  'lose-fat': ['Fat Burner'],
-  'increase-strength': ['Creatine'],
-  'boost-energy': ['Pre Workout'],
-  recovery: ['BCAA & EAA', 'Glutamine & Aminos', 'Carbohydrates & Recovery'],
-  'health-wellness': ['Multivitamins', 'Fish Oil', 'Health & Wellness'],
+const GOAL_PRODUCT_CATEGORIES: Record<
+  string,
+  { categories: string[]; keywords: string[]; excludedCategories?: string[] }
+> = {
+  'lose-fat': {
+    categories: ['Fat Burner'],
+    keywords: ['fat burner', 'cla', 'carnitine', 'shred', 'thermogenic', 'weight loss', 'svelte', 'buster', 'viper'],
+    excludedCategories: ['Whey Protein', 'Mass Gainer', 'Breakfast', 'Creatine'],
+  },
+  'gain-weight': {
+    categories: ['Mass Gainer'],
+    keywords: ['mass gainer', 'weight gainer', 'anabolic gainer'],
+    excludedCategories: ['Fat Burner'],
+  },
+  'build-muscle': {
+    categories: ['Whey Protein', 'Whey Isolate', 'Plant Protein', 'Protein'],
+    keywords: ['whey', 'isolate', 'protein', 'allwhey', 'isoflex'],
+    excludedCategories: ['Fat Burner'],
+  },
+  'increase-strength': {
+    categories: ['Creatine'],
+    keywords: ['creatine', 'strength', 'power'],
+    excludedCategories: ['Fat Burner'],
+  },
+  'boost-energy': {
+    categories: ['Pre Workout'],
+    keywords: ['pre workout', 'c4', 'energy', 'stim free preworkout'],
+    excludedCategories: ['Mass Gainer'],
+  },
+  recovery: {
+    categories: ['BCAA', 'EAA', 'BCAA & EAA', 'Glutamine & Aminos', 'Carbohydrates & Recovery', 'ZMA'],
+    keywords: ['bcaa', 'eaa', 'recovery', 'amino', 'zma'],
+    excludedCategories: ['Mass Gainer', 'Fat Burner'],
+  },
+  'health-wellness': {
+    categories: ['Multivitamins', 'Fish Oil', 'Health & Wellness', 'Liver Support', 'Others'],
+    keywords: ['multivitamin', 'fish oil', 'omega', 'tudca', 'ashwagandha', 'wellness', 'oats'],
+    excludedCategories: ['Fat Burner'],
+  },
 };
 
 export const GoalPage: React.FC = () => {
@@ -24,18 +56,61 @@ export const GoalPage: React.FC = () => {
   const slug = routeParams.goalSlug || 'build-muscle';
   const goal = GOALS.find((g) => g.slug === slug) || GOALS[0];
 
-  const allowedCategories = (
-    GOAL_PRODUCT_CATEGORIES[goal.slug] || []
-  ).map(normalizeCategory);
+  usePageSEO({
+    title: `Supplements for ${goal.title} – Best Fitness Nutrition`,
+    description: `Target your fitness goal: ${goal.title}. Discover recommended proteins, creatine, and recovery supplements tailored for maximum results at Workout Nutrition.`,
+  });
+
+  const rule = GOAL_PRODUCT_CATEGORIES[goal.slug] || {
+    categories: [],
+    keywords: [],
+  };
+
+  const allowedCategories = rule.categories.map(normalizeCategory);
+  const excludedCategories = (rule.excludedCategories || []).map(normalizeCategory);
 
   const goalProducts = products.filter((product) => {
     const category = normalizeCategory(product.category);
     const subcategory = normalizeCategory(product.subcategory);
 
-    return (
+    // 1. Strict Exclusion (e.g. Mass Gainer / Whey in Fat Loss)
+    if (excludedCategories.includes(category) && !rule.keywords.some((kw) => product.name.toLowerCase().includes(kw))) {
+      return false;
+    }
+
+    // 2. Strict Lose Fat logic: ONLY genuine fat loss supplements
+    if (goal.slug === 'lose-fat') {
+      const isFatBurnerCat = ['fatburner', 'fatburners'].includes(category);
+      const isFatLossTerm = [product.name, product.subcategory, ...(product.tags || [])].some((t) =>
+        /(fat\s*burner|cla|carnitine|shred|thermogenic|weight\s*loss|svelte|buster|viper)/i.test(t || '')
+      );
+      return isFatBurnerCat || isFatLossTerm;
+    }
+
+    // 3. Strict Gain Weight logic: ONLY Mass/Weight Gainers
+    if (goal.slug === 'gain-weight') {
+      const isGainerCat = ['massgainer', 'weightgainer'].includes(category);
+      const isGainerTerm = [product.name, product.subcategory, ...(product.tags || [])].some((t) =>
+        /(mass\s*gainer|weight\s*gainer|anabolic\s*gainer|bulk)/i.test(t || '')
+      );
+      return isGainerCat || isGainerTerm;
+    }
+
+    // 4. Match by allowed category
+    const matchesByCategory =
       allowedCategories.includes(category) ||
-      allowedCategories.includes(subcategory)
+      allowedCategories.includes(subcategory);
+
+    // 5. Match by explicit keyword in product name
+    const matchesByKeyword = rule.keywords.some((kw) =>
+      product.name.toLowerCase().includes(kw)
     );
+
+    // 6. Match by product goals array
+    const matchesByGoal =
+      Array.isArray(product.goals) && product.goals.includes(goal.id as any);
+
+    return matchesByCategory || matchesByKeyword || matchesByGoal;
   }).sort((a, b) => {
     const getPriority = (product: Product) => {
       const categories = [

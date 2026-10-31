@@ -68,7 +68,7 @@ export const BrandMegaMenu: React.FC<BrandMegaMenuProps> = ({ onClose }) => {
 
         <div className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs">
           <span className="text-zinc-500">
-            Showing all 20 certified sports nutrition manufacturers.
+            Showing all {BRANDS.length} brands from your stock list.
           </span>
           <button
             onClick={() => {

@@ -8,7 +8,7 @@ export const FloatingWhatsApp: React.FC = () => {
     const message = encodeURIComponent(
       'Hi IronForge Nutrition team! I need expert guidance choosing the right supplement stack for my fitness goals.'
     );
-    window.open(`https://wa.me/919876543210?text=${message}`, '_blank');
+    window.open(`https://wa.me/918264325436?text=${message}`, '_blank');
   };
 
   return (

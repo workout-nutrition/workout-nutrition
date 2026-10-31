@@ -29,7 +29,7 @@ export const ExpertRecommendationSection: React.FC = () => {
     const text = encodeURIComponent(
       `Hello IronForge! I need personalized supplement stack advice. My Goal: ${selectedGoal}, Experience: ${experienceLevel}. Please connect me with a certified sports nutritionist.`
     );
-    window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
+    window.open(`https://wa.me/918264325436?text=${text}`, '_blank');
   };
 
   const recommendedList = getRecommendedProducts();

@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { BRANDS } from '../../data/brands';
 import { ProductCard } from '../common/ProductCard';
 import { ShieldCheck, Award, Globe, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { usePageSEO } from '../../utils/seo';
 
 export const BrandPage: React.FC = () => {
   const { products, routeParams, navigate } = useStore();
@@ -24,6 +25,11 @@ export const BrandPage: React.FC = () => {
       'Directly sourced authentic fitness nutrition products with verified batch screening and original importer authenticity stamps.',
     authorizedDistributor: 'Official Importers (GMC / Glanbia / Bright / MusclePro)',
   };
+
+  usePageSEO({
+    title: `${brand.name} Supplements Online – 100% Genuine Products India`,
+    description: `Shop authentic ${brand.name} supplements in India. Official importer-verified batch codes, original hologram seal, fast delivery at Workout Nutrition.`,
+  });
 
   // Brand's products
   const brandProducts = products.filter(

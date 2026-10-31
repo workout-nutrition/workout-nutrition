@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, CartItem, Order } from '../types';
-import { PRODUCTS as STATIC_PRODUCTS } from '../data/products';
+import { Product, CartItem, Order, ProductVariant } from '../types';
 import { productsService } from '../lib/products.service';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 export type PageRoute =
   | 'home'
@@ -13,10 +14,13 @@ export type PageRoute =
   | 'goal'
   | 'cart'
   | 'checkout'
+  | 'order-success'
+  | 'order-cancel'
   | 'wishlist'
   | 'account'
   | 'track-order'
   | 'about'
+  | 'our-gym'
   | 'contact'
   | 'article'
   | 'faq'
@@ -32,6 +36,7 @@ export interface RouteParams {
   brandSlug?: string;
   goalSlug?: string;
   orderId?: string;
+  sessionId?: string;
   searchQuery?: string;
   articleSlug?: string;
 }
@@ -56,7 +61,13 @@ interface StoreContextType {
 
   // Cart
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number, flavour?: string, size?: string) => void;
+  addToCart: (
+    product: Product,
+    quantity?: number,
+    flavour?: string,
+    size?: string,
+    variant?: ProductVariant
+  ) => void;
   removeFromCart: (itemId: string) => void;
   updateCartQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -85,6 +96,7 @@ interface StoreContextType {
 
   // Orders & Checkout
   orders: Order[];
+  refreshOrders: () => Promise<void>;
   placeOrder: (orderData: Omit<Order, 'id' | 'date' | 'status' | 'trackingNumber'>) => Order;
 
   // Toasts
@@ -104,16 +116,21 @@ const getInitialPageFromUrl = (): PageRoute => {
   const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
   if (path === 'admin' || hash === 'admin') return 'admin';
   if (path === 'shop' || hash === 'shop') return 'shop';
+  if (path === 'our-gym' || hash === 'our-gym') return 'our-gym';
   if (path === 'account' || hash === 'account') return 'account';
   if (path === 'cart' || hash === 'cart') return 'cart';
   if (path === 'checkout' || hash === 'checkout') return 'checkout';
   if (path === 'wishlist' || hash === 'wishlist') return 'wishlist';
+  if (path === 'order/success' || path === 'order-success' || hash === 'order-success') return 'order-success';
+  if (path === 'order/cancel' || path === 'order-cancel' || hash === 'order-cancel') return 'order-cancel';
+  
   return 'home';
 };
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { user, openAuthModal } = useAuth();
   // Live Products State
-  const [products, setProducts] = useState<Product[]>(STATIC_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const loadProducts = async () => {
@@ -193,54 +210,107 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
-  // Orders State (Persisted)
-  const [orders, setOrders] = useState<Order[]>(() => {
+  // Orders State (Fetched from Supabase)
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const loadOrders = async () => {
     try {
-      const saved = localStorage.getItem('ironforge_orders');
-      if (saved) return JSON.parse(saved);
-      // Seed initial sample order for realistic demo
-      return [
-        {
-          id: 'IF-89241',
-          date: 'Yesterday, 14:32',
-          items: [
-            {
-              id: 'on-gold-standard-100-whey-Double Rich Chocolate-5 lbs (2.27 kg)',
-              product: STATIC_PRODUCTS[0],
-              quantity: 1,
-              selectedFlavour: 'Double Rich Chocolate',
-              selectedSize: '5 lbs (2.27 kg)',
-            },
-            {
-              id: 'muscletech-platinum-creatine-Unflavoured-250g (83 Servings)',
-              product: STATIC_PRODUCTS[1],
-              quantity: 1,
-              selectedFlavour: 'Unflavoured',
-              selectedSize: '250g (83 Servings)',
-            },
-          ],
-          subtotal: 4448,
-          discount: 444,
-          shipping: 0,
-          total: 4004,
-          status: 'In Transit',
-          trackingNumber: 'DELHIVERY-981240192',
-          shippingAddress: {
-            fullName: 'Arjun Mehra',
-            phone: '+91 98765 43210',
-            addressLine: 'Flat 402, Skyline Residency, Bandra West',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            pinCode: '400050',
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setOrders([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        return;
+      }
+
+      const mappedOrders: Order[] = data.map((o) => ({
+        id: o.id,
+        orderNumber: o.order_number,
+        date: new Date(o.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        }),
+        items: (o.order_items || []).map((item: any) => ({
+          id: item.id,
+          product: {
+            id: item.product_id,
+            name: item.product_name,
+            brand: item.product_brand,
+            price: item.unit_price_paise / 100,
+            originalPrice: item.unit_price_paise / 100,
+            discount: 0,
+            rating: 4.8,
+            reviewCount: 1,
+            category: 'Supplements',
+            images: item.product_image ? [item.product_image] : [],
+            flavours: [item.selected_flavour],
+            sizes: [item.selected_size],
+            inStock: true,
+            stock: 10,
+            description: '',
+            features: [],
+            nutritionFacts: {},
           },
-          paymentMethod: 'UPI (Google Pay)',
-          paymentStatus: 'Paid',
-        },
-      ];
-    } catch {
-      return [];
+          quantity: item.quantity,
+          selectedFlavour: item.selected_flavour,
+          selectedSize: item.selected_size,
+        })),
+        subtotal: o.subtotal_paise / 100,
+        discount: o.discount_paise / 100,
+        shipping: o.shipping_paise / 100,
+        total: o.total_paise / 100,
+        status: o.status,
+        trackingNumber:
+          o.tracking_number ||
+          (o.status === 'processing' || o.status === 'paid'
+            ? 'Pending Courier Pickup'
+            : 'N/A'),
+        shippingAddress: o.shipping_address,
+        paymentMethod:
+          o.payment_method === 'stripe' || o.payment_method === 'razorpay'
+            ? 'Online Payment (Razorpay)'
+            : 'Cash on Delivery (COD)',
+        paymentStatus:
+          o.payment_status === 'paid'
+            ? 'Paid'
+            : o.payment_status === 'cod_pending'
+            ? 'Pending COD'
+            : o.payment_status,
+        notes: o.notes,
+        estimatedDelivery: (() => {
+          try {
+            if (o.notes) {
+              const parsed = JSON.parse(o.notes);
+              return parsed.estimated_delivery_text || parsed.estimated_delivery;
+            }
+          } catch {}
+          return null;
+        })(),
+      }));
+
+      setOrders(mappedOrders);
+    } catch (err) {
+      console.warn('Failed to load user orders:', err);
     }
-  });
+  };
+
+  useEffect(() => {
+    loadOrders();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadOrders();
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // UI Drawer / Modals
   const [cartOpen, setCartOpen] = useState(false);
@@ -304,10 +374,31 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // Cart Functions
-  const addToCart = (product: Product, quantity = 1, flavour?: string, size?: string) => {
-    const selectedFlavour = flavour || product.flavours[0] || 'Standard';
-    const selectedSize = size || product.sizes[0] || 'Standard';
-    const itemId = `${product.id}-${selectedFlavour}-${selectedSize}`;
+  const addToCart = (
+    product: Product,
+    quantity = 1,
+    flavour?: string,
+    size?: string,
+    variant?: ProductVariant
+  ) => {
+    if (!user) {
+      addToast('Sign In Required', 'Please sign in to add products to your cart and place orders.', 'error');
+      openAuthModal('login', 'Please sign in to add items to your cart & place orders');
+      return;
+    }
+
+    const selectedFlavour = flavour || variant?.flavour || product.flavours[0] || 'Standard';
+    const selectedSize = size || variant?.weight || product.sizes[0] || 'Standard';
+    const variantId = variant?.id;
+    const variantPrice =
+      variant?.price !== undefined
+        ? Number(variant.price)
+        : Number(product.price);
+
+    // Differentiate items by unique variantId or flavour+size
+    const itemId = variantId
+      ? `${product.id}-${variantId}`
+      : `${product.id}-${selectedFlavour}-${selectedSize}`;
 
     setCart((prev) => {
       const existing = prev.find((item) => item.id === itemId);
@@ -316,10 +407,28 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           item.id === itemId ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { id: itemId, product, quantity, selectedFlavour, selectedSize }];
+      return [
+        ...prev,
+        {
+          id: itemId,
+          product: {
+            ...product,
+            price: variantPrice,
+          },
+          quantity,
+          selectedFlavour,
+          selectedSize,
+          variantId,
+          variantPrice,
+        },
+      ];
     });
 
-    addToast(`Added to Cart`, `${product.name} (${selectedFlavour}, ${selectedSize})`, 'success');
+    addToast(
+      `Added to Cart`,
+      `${product.name} (${selectedFlavour}, ${selectedSize}) - ₹${variantPrice.toLocaleString('en-IN')}`,
+      'success'
+    );
     setCartOpen(true);
   };
 
@@ -343,7 +452,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const cartSubtotal = cart.reduce((sum, item) => {
+    const price = item.variantPrice !== undefined ? item.variantPrice : item.product.price;
+    return sum + price * item.quantity;
+  }, 0);
 
   // Discount Calculation
   let discountAmount = 0;
@@ -457,6 +569,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         quickViewProduct,
         setQuickViewProduct,
         orders,
+        refreshOrders: loadOrders,
         placeOrder,
         toasts,
         addToast,

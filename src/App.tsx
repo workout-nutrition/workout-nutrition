@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { AuthProvider } from './context/AuthContext';
-import DemoOrdersButton from './components/DemoOrdersButton';
+
 import { Header } from './components/common/Header';
 import { MobileBottomBar } from './components/common/MobileBottomBar';
 import { Footer } from './components/common/Footer';
@@ -16,33 +16,37 @@ import { QuickViewModal } from './components/common/QuickViewModal';
 import { FloatingWhatsApp } from './components/common/FloatingWhatsApp';
 import { BackToTop } from './components/common/BackToTop';
 import { ToastNotification } from './components/common/ToastNotification';
-import { RecentBuyerPopup } from './components/common/RecentBuyerPopup';
 import { AuthModal } from './components/auth/AuthModal';
 
-// Pages
-import { HomePage } from './components/pages/HomePage';
-import { ShopPage } from './components/pages/ShopPage';
-import { CategoryPage } from './components/pages/CategoryPage';
-import { BrandPage } from './components/pages/BrandPage';
-import { GoalPage } from './components/pages/GoalPage';
-import { ProductDetailPage } from './components/pages/ProductDetailPage';
-import { ArticlePage } from './components/pages/ArticlePage';
-import { CartPage } from './components/pages/CartPage';
-import { CheckoutPage } from './components/pages/CheckoutPage';
-import { WishlistPage } from './components/pages/WishlistPage';
-import { AccountPage } from './components/pages/AccountPage';
-import { OrderTrackingPage } from './components/pages/OrderTrackingPage';
-import { AdminProductsPage } from './components/admin/AdminProductsPage';
+// Code-split pages for high performance and fast initial load
+const HomePage = lazy(() => import('./components/pages/HomePage').then((m) => ({ default: m.HomePage })));
+const ShopPage = lazy(() => import('./components/pages/ShopPage').then((m) => ({ default: m.ShopPage })));
+const CategoryPage = lazy(() => import('./components/pages/CategoryPage').then((m) => ({ default: m.CategoryPage })));
+const BrandPage = lazy(() => import('./components/pages/BrandPage').then((m) => ({ default: m.BrandPage })));
+const GoalPage = lazy(() => import('./components/pages/GoalPage').then((m) => ({ default: m.GoalPage })));
+const ProductDetailPage = lazy(() => import('./components/pages/ProductDetailPage').then((m) => ({ default: m.ProductDetailPage })));
+const ArticlePage = lazy(() => import('./components/pages/ArticlePage').then((m) => ({ default: m.ArticlePage })));
+const CartPage = lazy(() => import('./components/pages/CartPage').then((m) => ({ default: m.CartPage })));
+const CheckoutPage = lazy(() => import('./components/pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
+const OrderSuccessPage = lazy(() => import('./components/pages/OrderSuccessPage').then((m) => ({ default: m.OrderSuccessPage })));
+const OrderCancelPage = lazy(() => import('./components/pages/OrderCancelPage').then((m) => ({ default: m.OrderCancelPage })));
+const WishlistPage = lazy(() => import('./components/pages/WishlistPage').then((m) => ({ default: m.WishlistPage })));
+const AccountPage = lazy(() => import('./components/pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const OrderTrackingPage = lazy(() => import('./components/pages/OrderTrackingPage').then((m) => ({ default: m.OrderTrackingPage })));
+const AdminProductsPage = lazy(() => import('./components/admin/AdminProductsPage').then((m) => ({ default: m.AdminProductsPage })));
+const OurGymPage = lazy(() => import('./components/pages/OurGymPage').then((m) => ({ default: m.OurGymPage })));
 
-import {
-  AboutPage,
-  ContactPage,
-  FAQPage,
-  PolicyPage,
-} from './components/pages/StaticPages';
+const AboutPage = lazy(() => import('./components/pages/StaticPages').then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./components/pages/StaticPages').then((m) => ({ default: m.ContactPage })));
+const FAQPage = lazy(() => import('./components/pages/StaticPages').then((m) => ({ default: m.FAQPage })));
+const PolicyPage = lazy(() => import('./components/pages/StaticPages').then((m) => ({ default: m.PolicyPage })));
 
-// Demo order form
-import DemoOrderForm from './components/DemoOrderForm';
+const PageLoadingFallback: React.FC = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center p-8">
+    <div className="w-10 h-10 border-3 border-red-600 border-t-transparent rounded-full animate-spin mb-3" />
+    <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">Loading...</span>
+  </div>
+);
 
 const MainRouter: React.FC = () => {
   const { currentPage } = useStore();
@@ -76,6 +80,12 @@ const MainRouter: React.FC = () => {
       case 'checkout':
         return <CheckoutPage />;
 
+      case 'order-success':
+        return <OrderSuccessPage />;
+
+      case 'order-cancel':
+        return <OrderCancelPage />;
+
       case 'wishlist':
         return <WishlistPage />;
 
@@ -87,6 +97,9 @@ const MainRouter: React.FC = () => {
 
       case 'admin':
         return <AdminProductsPage />;
+
+      case 'our-gym':
+        return <OurGymPage />;
 
       case 'about':
         return <AboutPage />;
@@ -106,45 +119,24 @@ const MainRouter: React.FC = () => {
       case 'terms':
         return <PolicyPage type="terms" />;
 
-      // Demo orders page
-      case 'demo-orders':
-        return (
-          <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-xl">
-              <div className="mb-6 text-center">
-                <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-red-600">
-                  Development Demo
-                </p>
-                <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-                  Demo Order Checkout
-                </h1>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">
-                  Test how customer orders are saved to Supabase.
-                  No real payment will be taken.
-                </p>
-              </div>
-
-              <DemoOrderForm />
-            </div>
-          </div>
-        );
-
       default:
         return <HomePage />;
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-white text-zinc-900 selection:bg-red-600 selection:text-white">
-      {/* Main header */}
+    <div className="min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-red-600 selection:text-white">
+      {/* Website header on every page */}
       <Header />
-      <DemoOrdersButton />
-      {/* Main page content */}
+
+      {/* Main page content with Suspense for lazy chunks */}
       <main className="flex-1 w-full">
-        {renderPage()}
+        <Suspense fallback={<PageLoadingFallback />}>
+          {renderPage()}
+        </Suspense>
       </main>
 
-      {/* Footer */}
+      {/* Website Footer */}
       <Footer />
 
       {/* Mobile navigation */}
@@ -154,7 +146,6 @@ const MainRouter: React.FC = () => {
       <CartDrawer />
       <SearchModal />
       <QuickViewModal />
-      <RecentBuyerPopup />
       <FloatingWhatsApp />
       <BackToTop />
       <ToastNotification />

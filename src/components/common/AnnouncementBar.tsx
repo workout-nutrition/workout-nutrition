@@ -48,9 +48,9 @@ export const AnnouncementBar: React.FC = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-4 text-zinc-400 text-xs">
-          <span className="hover:text-white transition-colors cursor-pointer">
-            Support: +91 98765 43210
-          </span>
+          <a href="tel:+918264325436" className="hover:text-white transition-colors cursor-pointer">
+            Support: +91-8264325436
+          </a>
           <span className="text-zinc-600">|</span>
           <span className="text-red-400 font-semibold">100% Genuine</span>
         </div>

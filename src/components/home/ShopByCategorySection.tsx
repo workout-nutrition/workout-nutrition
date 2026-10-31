@@ -23,7 +23,7 @@ export const ShopByCategorySection: React.FC = () => {
     {
       id: 'pre-workout',
       name: 'PRE-WORKOUT',
-      slug: 'pre-workout',
+      slug: 'pre-workouts',
       tagline: 'High-Stim & Pump Formulas',
       image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80',
     },
@@ -44,22 +44,22 @@ export const ShopByCategorySection: React.FC = () => {
     {
       id: 'multivitamins',
       name: 'MULTIVITAMINS',
-      slug: 'multivitamins',
+      slug: 'multivitamin',
       tagline: 'Daily Athlete Micronutrients',
       image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'bcaa-eaa',
       name: 'BCAA / EAA',
-      slug: 'bcaa-eaa',
+      slug: 'bcaa',
       tagline: 'Intra-Workout Aminos',
       image: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'wellness',
       name: 'WELLNESS',
-      slug: 'health-wellness',
-      tagline: 'Joint, ZMA & Vitality',
+      slug: 'fat-burner',
+      tagline: 'Fat Burners & Vitality',
       image: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=600&q=80',
     },
   ];

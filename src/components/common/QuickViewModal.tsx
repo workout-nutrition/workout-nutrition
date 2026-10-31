@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { formatCurrency } from '../../utils/formatters';
 import { VegTag } from './VegTag';
@@ -18,17 +18,101 @@ export const QuickViewModal: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
 
-  if (!quickViewProduct) return null;
-
   const product = quickViewProduct;
-  const isOutOfStock = product.stock === 0;
-  const currentFlavour = selectedFlavour || product.flavours[0];
-  const currentSize = selectedSize || product.sizes[0];
+
+  const hasDynamicVariants = Array.isArray(product?.variants) && product!.variants.length > 0;
+
+  // Available flavours
+  const availableFlavours = useMemo(() => {
+    if (!product) return [];
+    if (hasDynamicVariants) {
+      const unique = Array.from(
+        new Set(product.variants!.map((v) => v.flavour.trim()).filter(Boolean))
+      );
+      if (unique.length > 0) return unique;
+    }
+    return product.flavours.length > 0 ? product.flavours : ['Standard'];
+  }, [product, hasDynamicVariants]);
+
+  // Current flavour
+  const currentFlavour = selectedFlavour || availableFlavours[0] || 'Standard';
+
+  // Variants under current flavour
+  const flavourVariants = useMemo(() => {
+    if (!product || !hasDynamicVariants) return [];
+    return product.variants!.filter(
+      (v) => v.flavour.trim().toLowerCase() === currentFlavour.trim().toLowerCase()
+    );
+  }, [product, hasDynamicVariants, currentFlavour]);
+
+  // Available weights/sizes
+  const availableWeights = useMemo(() => {
+    if (!product) return [];
+    if (hasDynamicVariants) {
+      return flavourVariants.map((v) => v.weight);
+    }
+    return product.sizes.length > 0 ? product.sizes : ['Standard'];
+  }, [product, hasDynamicVariants, flavourVariants]);
+
+  // Current size
+  const currentSize = selectedSize || availableWeights[0] || 'Standard';
+
+  // Sync size when flavour changes
+  useEffect(() => {
+    if (availableWeights.length > 0 && !availableWeights.some((w) => w.toLowerCase() === currentSize.toLowerCase())) {
+      setSelectedSize(availableWeights[0]);
+    }
+  }, [availableWeights, currentSize]);
+
+  // Active Variant & Pricing
+  const activeVariant = useMemo(() => {
+    if (!hasDynamicVariants) return undefined;
+    return (
+      flavourVariants.find(
+        (v) => v.weight.trim().toLowerCase() === currentSize.trim().toLowerCase()
+      ) || flavourVariants[0]
+    );
+  }, [hasDynamicVariants, flavourVariants, currentSize]);
+
+  const sizeVariant = product?.sizeVariants?.find(
+    (v) => v.size.trim().toLowerCase() === currentSize.trim().toLowerCase()
+  );
+
+  const activePrice = activeVariant
+    ? activeVariant.price
+    : sizeVariant?.price && sizeVariant.price > 0
+    ? sizeVariant.price
+    : product?.price || 0;
+
+  const activeOriginalPrice =
+    activeVariant?.originalPrice && activeVariant.originalPrice > 0
+      ? activeVariant.originalPrice
+      : sizeVariant?.originalPrice && sizeVariant.originalPrice > 0
+      ? sizeVariant.originalPrice
+      : product?.originalPrice || 0;
+
+  const activeDiscount =
+    activeOriginalPrice > activePrice && activeOriginalPrice > 0
+      ? Math.round(((activeOriginalPrice - activePrice) / activeOriginalPrice) * 100)
+      : product?.discount || 0;
+
+  const isOutOfStock = activeVariant
+    ? activeVariant.stock <= 0 || activeVariant.isActive === false
+    : product?.stock === 0;
+
+  if (!product) return null;
+
   const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
-    addToCart(product, quantity, currentFlavour, currentSize);
+    const productToAdd = {
+      ...product,
+      price: activePrice,
+      originalPrice: activeOriginalPrice,
+      discount: activeDiscount,
+    };
+    addToCart(productToAdd, quantity, currentFlavour, currentSize, activeVariant);
     setQuickViewProduct(null);
   };
 
@@ -60,9 +144,9 @@ export const QuickViewModal: React.FC = () => {
             <span className="absolute top-4 left-4 bg-zinc-900 text-white font-mono font-bold text-xs px-2.5 py-1 rounded-md uppercase tracking-wider">
               OUT OF STOCK
             </span>
-          ) : product.discount > 0 ? (
+          ) : activeDiscount > 0 ? (
             <span className="absolute top-4 left-4 bg-red-600 text-white font-mono font-bold text-xs px-2.5 py-1 rounded-md">
-              {product.discount}% OFF
+              {activeDiscount}% OFF
             </span>
           ) : null}
         </div>
@@ -90,32 +174,36 @@ export const QuickViewModal: React.FC = () => {
               <span className="text-zinc-400">({product.reviewCount} Verified Reviews)</span>
             </div>
 
-            {/* Price */}
+            {/* Dynamic Price Display */}
             <div className="flex items-baseline gap-2.5 mb-4">
               <span className="font-price text-2xl text-zinc-950 tabular-nums">
-                {formatCurrency(product.price)}
+                {formatCurrency(activePrice)}
               </span>
-              <span className="font-mono text-sm line-through text-zinc-400 tabular-nums">
-                {formatCurrency(product.originalPrice)}
-              </span>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                Save {formatCurrency(product.originalPrice - product.price)}
-              </span>
+              {activeOriginalPrice > activePrice && (
+                <span className="font-mono text-sm line-through text-zinc-400 tabular-nums">
+                  {formatCurrency(activeOriginalPrice)}
+                </span>
+              )}
+              {activeOriginalPrice > activePrice && (
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                  Save {formatCurrency(activeOriginalPrice - activePrice)}
+                </span>
+              )}
             </div>
 
             {/* Flavour Options */}
-            {product.flavours.length > 0 && (
+            {availableFlavours.length > 0 && (
               <div className="mb-3">
                 <div className="text-xs font-bold text-zinc-700 mb-1.5">
                   Flavour: <span className="font-semibold text-red-600">{currentFlavour}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {product.flavours.map((flv) => (
+                  {availableFlavours.map((flv) => (
                     <button
                       key={flv}
                       onClick={() => setSelectedFlavour(flv)}
                       className={`text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                        currentFlavour === flv
+                        currentFlavour.toLowerCase() === flv.toLowerCase()
                           ? 'border-red-600 bg-red-50 text-red-700 font-bold'
                           : 'border-zinc-200 text-zinc-600 hover:border-zinc-300'
                       }`}
@@ -127,26 +215,40 @@ export const QuickViewModal: React.FC = () => {
               </div>
             )}
 
-            {/* Size Options */}
-            {product.sizes.length > 0 && (
+            {/* Size Options (with dynamic price indicator) */}
+            {availableWeights.length > 0 && (
               <div className="mb-4">
                 <div className="text-xs font-bold text-zinc-700 mb-1.5">
                   Size: <span className="font-semibold text-red-600">{currentSize}</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {product.sizes.map((sz) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className={`text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                        currentSize === sz
-                          ? 'border-red-600 bg-red-50 text-red-700 font-bold'
-                          : 'border-zinc-200 text-zinc-600 hover:border-zinc-300'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
+                  {availableWeights.map((sz) => {
+                    const isSelected = currentSize.toLowerCase() === sz.toLowerCase();
+                    const vMatch = hasDynamicVariants
+                      ? flavourVariants.find((v) => v.weight.trim().toLowerCase() === sz.trim().toLowerCase())
+                      : undefined;
+                    const legMatch = !hasDynamicVariants
+                      ? product.sizeVariants?.find((v) => v.size.trim().toLowerCase() === sz.trim().toLowerCase())
+                      : undefined;
+                    const szPrice = vMatch ? vMatch.price : legMatch?.price && legMatch.price > 0 ? legMatch.price : product.price;
+
+                    return (
+                      <button
+                        key={sz}
+                        onClick={() => setSelectedSize(sz)}
+                        className={`text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'border-red-600 bg-red-50 text-red-700 font-bold shadow-xs'
+                            : 'border-zinc-200 text-zinc-600 hover:border-zinc-300'
+                        }`}
+                      >
+                        <span>{sz}</span>
+                        <span className={`text-[10px] font-mono ${isSelected ? 'text-red-700' : 'text-zinc-400'}`}>
+                          ({formatCurrency(szPrice)})
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -178,7 +280,7 @@ export const QuickViewModal: React.FC = () => {
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white font-btn text-xs uppercase tracking-wider py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-red-600/20 transition-colors cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>Add to Cart</span>
+                  <span>Add to Cart ({formatCurrency(activePrice)})</span>
                 </button>
               )}
 
@@ -208,4 +310,3 @@ export const QuickViewModal: React.FC = () => {
     </div>
   );
 };
-

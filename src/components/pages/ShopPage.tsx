@@ -1,16 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { BRANDS } from '../../data/brands';
+import { CATEGORIES } from '../../data/categories';
 import { ProductCard } from '../common/ProductCard';
 import { formatCurrency } from '../../utils/formatters';
 import { Filter, X, ChevronDown, Check, SlidersHorizontal, ArrowUpDown, Star } from 'lucide-react';
+import { usePageSEO } from '../../utils/seo';
 
 export const ShopPage: React.FC = () => {
   const { products, routeParams, navigate } = useStore();
 
+  usePageSEO({
+    title: 'Shop All 100% Authentic Supplements Online India',
+    description:
+      'Explore certified whey protein, pre-workouts, mass gainers, creatine, and wellness vitamins at Workout Nutrition. Batch verified authenticity with fast delivery.',
+  });
+
   // Filters State
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    routeParams.categorySlug ? [routeParams.categorySlug] : []
+    routeParams.categorySlug ? [CATEGORIES.find((c) => c.slug === routeParams.categorySlug)?.name || routeParams.categorySlug] : []
   );
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     routeParams.brandSlug ? [routeParams.brandSlug] : []
@@ -24,20 +32,8 @@ export const ShopPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>('featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Available Filter Options
-  const categoriesList = [
-    'Whey Protein',
-    'Whey Isolate',
-    'Creatine',
-    'Pre Workout',
-    'Mass Gainer',
-    'BCAA & EAA',
-    'Multivitamins',
-    'Fish Oil',
-    'Fat Burner',
-    'Health & Wellness',
-    'Glutamine & Aminos',
-  ];
+  // Category options are shared with the Excel-based category catalogue.
+  const categoriesList = CATEGORIES.map((category) => category.name);
 
   const priceRanges = [
     { id: 'under-1000', label: 'Under ₹1,000', min: 0, max: 1000 },
@@ -112,9 +108,10 @@ export const ShopPage: React.FC = () => {
 
       // Category filter
       if (selectedCategories.length > 0) {
-        const matchesCat = selectedCategories.some(
-          (c) => product.category.toLowerCase() === c.toLowerCase() || product.subcategory.toLowerCase() === c.toLowerCase()
-        );
+        const matchesCat = selectedCategories.some((c) => {
+          const normalize = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          return normalize(product.category) === normalize(c) || normalize(product.subcategory) === normalize(c);
+        });
         if (!matchesCat) return false;
       }
 
@@ -241,7 +238,7 @@ export const ShopPage: React.FC = () => {
           </div>
 
           {/* Desktop Left Sidebar Filters */}
-          <div className="hidden lg:block space-y-6">
+          <div className="hidden lg:block space-y-6 sticky top-1 self-start">
             <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-sm space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
                 <span className="font-heading font-black text-sm uppercase tracking-wider text-zinc-900 flex items-center gap-1.5">

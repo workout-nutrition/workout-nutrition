@@ -32,6 +32,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOutOfStock) return;
+    if (product.variants && product.variants.length > 0) {
+      const defaultVariant =
+        product.variants.find((v) => v.isActive !== false && v.stock > 0) || product.variants[0];
+      addToCart(product, 1, defaultVariant.flavour, defaultVariant.weight, defaultVariant);
+      return;
+    }
     addToCart(product, 1);
   };
 
@@ -127,14 +133,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           {/* Form / Flavor / Size Badge */}
-          {(product.flavours?.length > 0 || product.sizes?.length > 0) && (
+          {product.variants && product.variants.length > 0 ? (
+            <div className="mb-2.5">
+              <span className="inline-block text-[10px] font-medium text-zinc-600 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded truncate max-w-full">
+                {Array.from(new Set(product.variants.map((v) => v.flavour))).length} Flavours • {product.variants.length} Options
+              </span>
+            </div>
+          ) : product.flavours?.length > 0 || product.sizes?.length > 0 ? (
             <div className="mb-2.5">
               <span className="inline-block text-[10px] font-medium text-zinc-600 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded truncate max-w-full">
                 {product.flavours?.[0] ? `${product.flavours[0]} • ` : ''}
                 {product.sizes?.[0] || 'Standard'}
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Price & Add to Cart — Clean spacing and no wrapping overlap */}
@@ -143,7 +155,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
               {/* Price in Montserrat Bold */}
               <span className="font-price text-sm sm:text-base text-zinc-950 tabular-nums font-bold">
-                {formatCurrency(product.price)}
+                {product.variants && product.variants.length > 1 && (
+                  <span className="text-[10px] font-normal text-zinc-500 mr-1">From</span>
+                )}
+                {formatCurrency(
+                  product.variants && product.variants.length > 0
+                    ? Math.min(...product.variants.filter((v) => v.price > 0).map((v) => v.price))
+                    : product.price
+                )}
               </span>
               {product.originalPrice > product.price && (
                 <span className="font-mono text-[10px] sm:text-xs line-through text-zinc-400 tabular-nums">

@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { CATEGORIES } from '../../data/categories';
 import { ProductCard } from '../common/ProductCard';
 import { ArrowLeft, Tag, Layers, ArrowUpDown } from 'lucide-react';
+import { usePageSEO } from '../../utils/seo';
 
 export const CategoryPage: React.FC = () => {
   const { products: allProducts, routeParams, navigate } = useStore();
@@ -10,34 +11,33 @@ export const CategoryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('featured');
 
   const slug = routeParams.categorySlug || 'whey-protein';
-  const category = CATEGORIES.find((c) => c.slug === slug) || CATEGORIES[0];
+  
+  // Find category by slug, normalized name, or fallback
+  const normalize = (value: string) =>
+    (value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-  // Filter products by category and optional subcategory
+  const category =
+    CATEGORIES.find((c) => c.slug === slug || normalize(c.name) === normalize(slug)) ||
+    CATEGORIES.find((c) => normalize(c.slug).includes(normalize(slug)) || normalize(slug).includes(normalize(c.slug))) ||
+    CATEGORIES[0];
+
+  usePageSEO({
+    title: `Buy ${category.name} Online – 100% Genuine Supplements`,
+    description: `Shop authentic ${category.name} in India. Browse top certified brands with verified importer batch hologram seals and best prices at Workout Nutrition.`,
+  });
+
   const products = allProducts.filter((p) => {
-    let matchesCategory = false;
-    if (slug === 'whey-protein') {
-      matchesCategory = p.category === 'Whey Protein';
-    } else if (slug === 'whey-isolate') {
-      matchesCategory = p.category === 'Whey Isolate' || p.subcategory.toLowerCase().includes('isolate');
-    } else if (slug === 'creatine') {
-      matchesCategory = p.category === 'Creatine';
-    } else if (slug === 'pre-workout') {
-      matchesCategory = p.category === 'Pre Workout';
-    } else if (slug === 'mass-gainer') {
-      matchesCategory = p.category === 'Mass Gainer';
-    } else if (slug === 'bcaa-eaa') {
-      matchesCategory = p.category === 'BCAA & EAA' || p.category === 'Glutamine & Aminos';
-    } else if (slug === 'fish-oil') {
-      matchesCategory = p.category === 'Fish Oil';
-    } else if (slug === 'multivitamins') {
-      matchesCategory = p.category === 'Multivitamins';
-    } else if (slug === 'health-wellness') {
-      matchesCategory = p.category === 'Health & Wellness' || p.category === 'Fish Oil' || p.category === 'Multivitamins';
-    } else {
-      matchesCategory =
-        p.category.toLowerCase().replace(/\s+/g, '-').replace('&', '') === slug.replace('&', '') ||
-        p.category.toLowerCase() === category.name.toLowerCase();
-    }
+    const normCategory = normalize(p.category || '');
+    const normCatName = normalize(category.name);
+    const normCatSlug = normalize(category.slug);
+    const normSubcategory = normalize(p.subcategory || '');
+
+    const matchesCategory =
+      normCategory === normCatName ||
+      normCategory === normCatSlug ||
+      normCategory.replace(/s$/, '') === normCatName.replace(/s$/, '') ||
+      normSubcategory === normCatName ||
+      normSubcategory === normCatSlug;
 
     if (!matchesCategory) return false;
     if (selectedSubcategory && p.subcategory !== selectedSubcategory) return false;

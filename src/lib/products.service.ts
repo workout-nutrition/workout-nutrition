@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { Product } from '../types';
-import { PRODUCTS as STATIC_PRODUCTS } from '../data/products';
 
 // Helper to map DB row (snake_case) to Product interface (camelCase)
 export function mapDbProductToProduct(row: any): Product {
@@ -38,6 +37,8 @@ export function mapDbProductToProduct(row: any): Product {
     goalSupported: row.goal_supported,
     whatGoalDoesItSupport: row.what_goal_does_it_support,
     authenticityDetails: row.authenticity_details,
+    sizeVariants: Array.isArray(row.size_variants) ? row.size_variants : undefined,
+    variants: Array.isArray(row.variants) ? row.variants : undefined,
   };
 }
 
@@ -77,14 +78,16 @@ export function mapProductToDbRow(product: Partial<Product>): any {
   if (product.goalSupported !== undefined) row.goal_supported = product.goalSupported;
   if (product.whatGoalDoesItSupport !== undefined) row.what_goal_does_it_support = product.whatGoalDoesItSupport;
   if (product.authenticityDetails !== undefined) row.authenticity_details = product.authenticityDetails;
+  if (product.sizeVariants !== undefined) row.size_variants = product.sizeVariants;
+  if (product.variants !== undefined) row.variants = product.variants;
   row.updated_at = new Date().toISOString();
   return row;
 }
 
 export const productsService = {
   /**
-   * Fetch all products from Supabase.
-   * If table does not exist or has no rows, seamlessly fallbacks to local STATIC_PRODUCTS.
+   * Fetch products only from Supabase.
+   * An empty table returns an empty list; local demo products are not restored.
    */
   async getProducts(): Promise<{ products: Product[]; isFallback: boolean }> {
     try {
@@ -93,28 +96,41 @@ export const productsService = {
         .select('*')
         .order('name', { ascending: true });
 
-      if (error || !data || data.length === 0) {
-        if (error) {
-          console.warn('Supabase products fetch failed, using fallback catalog:', error.message);
-        }
-        return { products: STATIC_PRODUCTS, isFallback: true };
+      if (error) {
+        console.error('Failed to fetch products from Supabase:', error.message);
+        return { products: [], isFallback: false };
       }
 
       return {
-        products: data.map(mapDbProductToProduct),
+        products: (data ?? []).map(mapDbProductToProduct),
         isFallback: false,
       };
     } catch (err) {
       console.error('Error fetching products:', err);
-      return { products: STATIC_PRODUCTS, isFallback: true };
+      return { products: [], isFallback: false };
     }
   },
 
   /**
-   * Insert a new product into Supabase
+   * Insert a new product into database (attempts backend API first, then Supabase client)
    */
   async createProduct(product: Product): Promise<{ product: Product | null; error: Error | null }> {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      // 1. Try Backend API first
+      try {
+        const { createProductApi } = await import('./api');
+        const apiResult = await createProductApi(product, token);
+        if (apiResult) {
+          return { product: mapDbProductToProduct(apiResult), error: null };
+        }
+      } catch (apiErr: any) {
+        console.warn('Backend API create failed, attempting direct Supabase insert:', apiErr.message);
+      }
+
+      // 2. Fallback to direct Supabase client
       const dbRow = mapProductToDbRow(product);
       const { data, error } = await supabase
         .from('products')
@@ -130,10 +146,25 @@ export const productsService = {
   },
 
   /**
-   * Update an existing product in Supabase
+   * Update an existing product in database
    */
   async updateProduct(id: string, updates: Partial<Product>): Promise<{ product: Product | null; error: Error | null }> {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      // 1. Try Backend API first
+      try {
+        const { updateProductApi } = await import('./api');
+        const apiResult = await updateProductApi(id, updates, token);
+        if (apiResult) {
+          return { product: mapDbProductToProduct(apiResult), error: null };
+        }
+      } catch (apiErr: any) {
+        console.warn('Backend API update failed, attempting direct Supabase update:', apiErr.message);
+      }
+
+      // 2. Fallback to direct Supabase client
       const dbRow = mapProductToDbRow(updates);
       const { data, error } = await supabase
         .from('products')
@@ -150,16 +181,38 @@ export const productsService = {
   },
 
   /**
-   * Delete a product from Supabase
+   * Delete a product from database
    */
   async deleteProduct(id: string): Promise<{ success: boolean; error: Error | null }> {
     try {
-      const { error } = await supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      // 1. Try Backend API first
+      try {
+        const { deleteProductApi } = await import('./api');
+        const apiResult = await deleteProductApi(id, token);
+        if (apiResult?.success) {
+          return { success: true, error: null };
+        }
+      } catch (apiErr: any) {
+        console.warn('Backend API delete failed, attempting direct Supabase delete:', apiErr.message);
+      }
+
+      // 2. Fallback to direct Supabase client
+      const { data, error } = await supabase
         .from('products')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select('id');
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error(
+          'No product was deleted. It may already be missing, or Supabase delete permissions (RLS) may block this action.'
+        );
+      }
+
       return { success: true, error: null };
     } catch (err: any) {
       return { success: false, error: err instanceof Error ? err : new Error(err.message) };
@@ -167,10 +220,27 @@ export const productsService = {
   },
 
   /**
-   * Upload an image to Supabase Storage bucket 'product-images'
+   * Upload an image to Supabase Storage:
+   * First tries backend secure endpoint POST /api/media/upload,
+   * with seamless fallback to client Supabase Storage SDK.
    */
   async uploadImage(file: File): Promise<{ url: string | null; error: Error | null }> {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      // 1. Try Backend media endpoint first
+      try {
+        const { uploadProductImageApi } = await import('./api');
+        const uploadResult = await uploadProductImageApi(file, token);
+        if (uploadResult?.url) {
+          return { url: uploadResult.url, error: null };
+        }
+      } catch (apiErr: any) {
+        console.warn('Backend image upload failed, falling back to direct Supabase storage:', apiErr.message);
+      }
+
+      // 2. Direct Supabase Storage client fallback
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
       const filePath = `products/${fileName}`;
@@ -194,3 +264,4 @@ export const productsService = {
     }
   },
 };
+

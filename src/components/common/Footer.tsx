@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { PaymentMethodBadges } from './PaymentIcons';
 import {
-  Dumbbell,
   Instagram,
   Facebook,
   Youtube,
@@ -12,6 +11,8 @@ import {
   Clock,
 } from 'lucide-react';
 
+const LOGO_PATH = '/products/logo.png';
+
 export const Footer: React.FC = () => {
   const { navigate } = useStore();
 
@@ -19,28 +20,35 @@ export const Footer: React.FC = () => {
     <footer className="bg-zinc-950 text-white border-t border-zinc-900 pt-16 pb-24 lg:pb-12 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* 4-Column Navigation Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-zinc-900 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-zinc-900 text-xs">
           {/* Column 1: Brand Logo, Description, Address, Social */}
-          <div className="space-y-4">
+          <div className="lg:col-span-5 space-y-5 lg:pr-6">
             <button
               onClick={() => navigate('home')}
-              className="flex items-center gap-2 group text-left cursor-pointer"
+              className="flex items-center gap-3 group text-left cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center text-white font-black shadow-sm">
-                <Dumbbell className="w-4 h-4 -rotate-45" />
-              </div>
-              <div className="flex items-baseline">
-                <span className="font-display font-normal text-2xl tracking-wider text-white uppercase">
-                  WORKOUT
-                </span>
-                <span className="font-display font-normal text-2xl tracking-wider text-red-600 ml-1 uppercase">
-                  NUTRITION
-                </span>
+              <img
+                src={LOGO_PATH}
+                alt="Workout Nutrition Logo"
+                className="w-10 h-10 rounded-xl object-contain bg-zinc-900/60 p-1 border border-zinc-800"
+              />
+              <div>
+                <div className="flex items-baseline">
+                  <span className="font-display font-normal text-2xl tracking-wider text-white uppercase">
+                    WORKOUT
+                  </span>
+                  <span className="font-display font-normal text-2xl tracking-wider text-red-600 ml-1.5 uppercase">
+                    NUTRITION
+                  </span>
+                </div>
+                <div className="font-medium tracking-widest uppercase text-zinc-500 text-[8px] -mt-0.5">
+                  AUTHENTIC SPORTS SUPPLEMENTS
+                </div>
               </div>
             </button>
 
             <p className="font-body text-zinc-400 font-normal leading-relaxed text-[11px] max-w-sm">
-              India’s premier sports supplements destination. We stock only batch-verified, 100% authentic dietary supplements sourced directly from official brand importers.
+              India's premier sports supplements destination. We stock only batch-verified, 100% authentic dietary supplements sourced directly from official brand importers.
             </p>
 
             {/* Registered Shop Address */}
@@ -54,11 +62,15 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 text-zinc-400">
                 <Phone className="w-3.5 h-3.5 text-zinc-500" />
-                <span>+91 98765 43210</span>
+                <a href="tel:+918264325436" className="hover:text-white transition-colors">
+                  +91-8264325436
+                </a>
               </div>
               <div className="flex items-center gap-2 text-zinc-400">
                 <Mail className="w-3.5 h-3.5 text-zinc-500" />
-                <span>support@workoutnutrition.in</span>
+                <a href="mailto:workoutnutrition.inquires@gmail.com" className="hover:text-white transition-colors">
+                  workoutnutrition.inquires@gmail.com
+                </a>
               </div>
             </div>
 
@@ -93,63 +105,63 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 2: SHOP */}
-          <div>
+          {/* Column 2: SHOP (col-span-2) */}
+          <div className="lg:col-span-2 lg:pl-2">
             <h5 className="font-body font-semibold text-xs uppercase tracking-wider text-white mb-4">
               SHOP
             </h5>
             <ul className="space-y-2.5 text-zinc-400 font-body text-xs">
               <li>
-                <button onClick={() => navigate('shop')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('shop')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Shop All Supplements
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('category', { categorySlug: 'whey-protein' })} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('category', { categorySlug: 'whey-protein' })} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Protein
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('category', { categorySlug: 'creatine' })} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('category', { categorySlug: 'creatine' })} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Creatine
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('category', { categorySlug: 'pre-workout' })} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('category', { categorySlug: 'pre-workout' })} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Pre-Workout
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('category', { categorySlug: 'mass-gainer' })} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('category', { categorySlug: 'mass-gainer' })} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Mass Gainer
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('category', { categorySlug: 'health-wellness' })} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('category', { categorySlug: 'health-wellness' })} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Wellness
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: COMPANY */}
-          <div>
+          {/* Column 3: COMPANY (col-span-2) */}
+          <div className="lg:col-span-2">
             <h5 className="font-body font-semibold text-xs uppercase tracking-wider text-white mb-4">
               COMPANY
             </h5>
             <ul className="space-y-2.5 text-zinc-400 font-body text-xs">
               <li>
-                <button onClick={() => navigate('about')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('about')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   About Us
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('contact')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('contact')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Contact
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('about')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('about')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Our Mission
                 </button>
               </li>
@@ -162,7 +174,7 @@ export const Footer: React.FC = () => {
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }, 100);
                   }}
-                  className="hover:text-red-500 transition-colors text-left"
+                  className="hover:text-red-500 transition-colors text-left cursor-pointer"
                 >
                   Fitness Knowledge
                 </button>
@@ -170,34 +182,34 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Column 4: CUSTOMER SUPPORT */}
-          <div>
+          {/* Column 4: CUSTOMER SUPPORT (col-span-3) */}
+          <div className="lg:col-span-3">
             <h5 className="font-body font-semibold text-xs uppercase tracking-wider text-white mb-4">
               CUSTOMER SUPPORT
             </h5>
-            <ul className="space-y-2.5 text-zinc-400">
+            <ul className="space-y-2.5 text-zinc-400 font-body text-xs">
               <li>
-                <button onClick={() => navigate('track-order')} className="hover:text-red-500 transition-colors text-left font-semibold text-zinc-200">
+                <button onClick={() => navigate('track-order')} className="hover:text-red-500 transition-colors text-left font-semibold text-zinc-200 cursor-pointer">
                   Track Order
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('shipping-policy')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('shipping-policy')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Shipping Policy
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('return-policy')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('return-policy')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Returns & Authenticity
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('faq')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('faq')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   FAQs
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('contact')} className="hover:text-red-500 transition-colors text-left">
+                <button onClick={() => navigate('contact')} className="hover:text-red-500 transition-colors text-left cursor-pointer">
                   Contact Support
                 </button>
               </li>

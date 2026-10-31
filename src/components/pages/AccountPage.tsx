@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 
 export const AccountPage: React.FC = () => {
-  const { orders, wishlist, navigate, addToast } = useStore();
-  const { user, profile, isAdmin, openAuthModal, signOut, promoteToAdmin } = useAuth();
+  const { orders, wishlist, navigate } = useStore();
+  const { user, profile, isAdmin, openAuthModal, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses'>('orders');
 
   // If not logged in, prompt user to sign in
@@ -31,7 +31,7 @@ export const AccountPage: React.FC = () => {
             Account Sign In
           </h2>
           <p className="text-xs sm:text-sm text-zinc-500 mt-2 mb-6">
-            Sign in to view your orders, live shipments, saved addresses, and admin controls.
+            Sign in to view your orders, live shipments, and saved addresses.
           </p>
 
           <div className="flex flex-col gap-3">
@@ -62,16 +62,10 @@ export const AccountPage: React.FC = () => {
     .substring(0, 2)
     .toUpperCase();
 
-  const handleOpenAdminPortal = async () => {
-    if (!isAdmin) {
-      const { error } = await promoteToAdmin();
-      if (error) {
-        addToast('Error', error.message, 'error');
-        return;
-      }
-      addToast('Admin Enabled', 'Your account is now an Administrator', 'success');
+  const handleOpenAdminPortal = () => {
+    if (isAdmin) {
+      navigate('admin');
     }
-    navigate('admin');
   };
 
   return (
@@ -114,13 +108,15 @@ export const AccountPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleOpenAdminPortal}
-              className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-red-600/20"
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>{isAdmin ? 'Admin Portal (Add / Delete Products)' : 'Enable Admin & Manage Products'}</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleOpenAdminPortal}
+                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-red-600/20"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>Admin Portal</span>
+              </button>
+            )}
             <button
               onClick={() => navigate('track-order')}
               className="bg-zinc-900 hover:bg-black text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -136,16 +132,18 @@ export const AccountPage: React.FC = () => {
           {/* Navigation Sidebar (3 cols) */}
           <div className="lg:col-span-3">
             <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-sm space-y-1">
-              <button
-                onClick={handleOpenAdminPortal}
-                className="w-full text-left p-3 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-between transition-colors cursor-pointer mb-1 border border-red-200/80"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Plus className="w-4 h-4" />
-                  <span>Manage Products (Admin)</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={handleOpenAdminPortal}
+                  className="w-full text-left p-3 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-between transition-colors cursor-pointer mb-1 border border-red-200/80"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Plus className="w-4 h-4" />
+                    <span>Manage Products (Admin)</span>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab('orders')}
@@ -242,9 +240,23 @@ export const AccountPage: React.FC = () => {
                           <span className="text-zinc-500">{order.date}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-50 text-amber-700 border border-amber-200">
-                            {order.status}
-                          </span>
+                          {order.status.toLowerCase() === 'delivered' ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Delivered
+                            </span>
+                          ) : order.status.toLowerCase() === 'shipped' ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                              Shipped
+                            </span>
+                          ) : order.status.toLowerCase() === 'confirmed' ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-purple-50 text-purple-700 border border-purple-200">
+                              Confirmed (3-Day Window)
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                              In Process
+                            </span>
+                          )}
                           <button
                             onClick={() => navigate('track-order', { orderId: order.id })}
                             className="text-xs font-bold text-red-600 hover:underline cursor-pointer"
@@ -253,6 +265,22 @@ export const AccountPage: React.FC = () => {
                           </button>
                         </div>
                       </div>
+
+                      {/* 3-Day Delivery Notification Banner */}
+                      {order.status.toLowerCase() === 'confirmed' && (
+                        <div className="bg-purple-50/80 border border-purple-200 rounded-xl p-3 flex items-center justify-between text-xs text-purple-900">
+                          <div className="flex items-center gap-2 font-medium">
+                            <Package className="w-4 h-4 text-purple-600 shrink-0" />
+                            <span>
+                              Order Confirmed by Store! Expected delivery by{' '}
+                              <strong>{order.estimatedDelivery || 'within 3 days'}</strong>.
+                            </span>
+                          </div>
+                          <span className="bg-purple-200/60 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                            Dispatching
+                          </span>
+                        </div>
+                      )}
 
                       {/* Items */}
                       <div className="space-y-2 text-xs">
@@ -267,7 +295,7 @@ export const AccountPage: React.FC = () => {
                               <div>
                                 <div className="font-bold text-zinc-900">{item.product.name}</div>
                                 <div className="text-[10px] text-zinc-500">
-                                  {item.selectedFlavour} · Qty: {item.quantity}
+                                  {item.selectedFlavour} · {item.selectedSize} · Qty: {item.quantity}
                                 </div>
                               </div>
                             </div>
@@ -350,7 +378,7 @@ export const AccountPage: React.FC = () => {
                     <strong className="text-zinc-900 font-bold">Primary Residence (Default)</strong>
                     <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">Home</span>
                   </div>
-                  <p className="text-zinc-600">{displayName} · {profile?.phone || '+91 98765 43210'}</p>
+                  <p className="text-zinc-600">{displayName} · {profile?.phone || '+91-8264325436'}</p>
                   <p className="text-zinc-600">{profile?.addressLine || 'Flat 402, Skyline Residency, Bandra West'}</p>
                   <p className="text-zinc-600">{profile?.city || 'Mumbai'}, {profile?.state || 'Maharashtra'} – {profile?.pinCode || '400050'}</p>
                 </div>

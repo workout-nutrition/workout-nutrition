@@ -29,7 +29,7 @@ export const ProductRecommendationSection: React.FC = () => {
     const text = encodeURIComponent(
       `Hi Workout Nutrition Team! I would like guidance choosing supplements for my goal: ${selectedGoal.replace('-', ' ')} (${experienceLevel}).`
     );
-    window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
+    window.open(`https://wa.me/918264325436?text=${text}`, '_blank');
   };
 
   const recommendedList = getRecommendedProducts();

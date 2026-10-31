@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { PRODUCTS as FALLBACK_PRODUCTS } from '../../data/products';
 import { formatCurrency } from '../../utils/formatters';
 import { ArrowRight, ShieldCheck, Zap, Award } from 'lucide-react';
 import heroVisual from '../../assets/images/hero_athlete_training_1791377063699.jpg';
 
 export const HeroSection: React.FC = () => {
   const { products, navigate } = useStore();
-  const catalog = products.length > 0 ? products : FALLBACK_PRODUCTS;
 
-  // 3 genuine products representing distinct categories: Whey, Creatine, Pre-Workout
+  // Showcase items directly from live Supabase products
+  const wheyProduct =
+    products.find((p) => (p.category || '').toLowerCase().includes('whey') || (p.category || '').toLowerCase().includes('protein')) ||
+    products[0];
+
+  const creatineProduct =
+    products.find((p) => (p.category || '').toLowerCase().includes('creatine')) ||
+    products[1] ||
+    products[0];
+
+  const preWorkoutProduct =
+    products.find((p) => (p.category || '').toLowerCase().includes('pre')) ||
+    products[2] ||
+    products[0];
+
   const showcaseProducts = [
-    {
-      label: 'Whey Protein',
-      product: catalog.find((p) => p.category === 'Whey Protein') || catalog[0] || FALLBACK_PRODUCTS[0],
-    },
-    {
-      label: 'Creatine',
-      product: catalog.find((p) => p.category === 'Creatine') || catalog[1] || FALLBACK_PRODUCTS[1],
-    },
-    {
-      label: 'Pre-Workout',
-      product: catalog.find((p) => p.category === 'Pre Workout') || catalog[2] || FALLBACK_PRODUCTS[4],
-    },
-  ];
+    { label: 'Whey Protein', product: wheyProduct },
+    { label: 'Creatine', product: creatineProduct },
+    { label: 'Pre-Workout', product: preWorkoutProduct },
+  ].filter((item) => Boolean(item.product));
 
   const [activeIdx, setActiveIdx] = useState(0);
-  const activeProduct = showcaseProducts[activeIdx].product;
+  const activeProduct = showcaseProducts[activeIdx]?.product || products[0];
 
   const scrollToGoal = () => {
     const el = document.getElementById('shop-by-goal');
@@ -120,43 +123,45 @@ export const HeroSection: React.FC = () => {
               </div>
 
               {/* Real Floating Product Card with Actual Product Data & Image */}
-              <div
-                onClick={() => navigate('product', { productId: activeProduct.id })}
-                className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl text-zinc-900 flex items-center justify-between gap-3 cursor-pointer hover:bg-white transition-all hover:scale-[1.02] z-20"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-zinc-50 border border-zinc-200 p-1 shrink-0 flex items-center justify-center">
-                    <img
-                      src={activeProduct.images[0]}
-                      alt={activeProduct.name}
-                      className="w-full h-full object-contain"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold uppercase text-red-600 font-mono tracking-wider">
-                      {activeProduct.brand} · 100% GENUINE
+              {activeProduct && (
+                <div
+                  onClick={() => navigate('product', { productId: activeProduct.id })}
+                  className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-xl text-zinc-900 flex items-center justify-between gap-3 cursor-pointer hover:bg-white transition-all hover:scale-[1.02] z-20"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-xl bg-zinc-50 border border-zinc-200 p-1 shrink-0 flex items-center justify-center">
+                      <img
+                        src={activeProduct.images?.[0] || ''}
+                        alt={activeProduct.name}
+                        className="w-full h-full object-contain"
+                        referrerPolicy="no-referrer"
+                      />
                     </div>
-                    <div className="font-heading font-black text-xs sm:text-sm text-zinc-900 line-clamp-1">
-                      {activeProduct.name}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs mt-0.5">
-                      <span className="font-mono font-black text-zinc-900">
-                        {formatCurrency(activeProduct.price)}
-                      </span>
-                      {activeProduct.discount > 0 && (
-                        <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
-                          {activeProduct.discount}% OFF
+                    <div>
+                      <div className="text-[10px] font-bold uppercase text-red-600 font-mono tracking-wider">
+                        {activeProduct.brand} · 100% GENUINE
+                      </div>
+                      <div className="font-heading font-black text-xs sm:text-sm text-zinc-900 line-clamp-1">
+                        {activeProduct.name}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs mt-0.5">
+                        <span className="font-mono font-black text-zinc-900">
+                          {formatCurrency(activeProduct.price)}
                         </span>
-                      )}
+                        {activeProduct.discount > 0 && (
+                          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
+                            {activeProduct.discount}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl shrink-0">
-                  <ArrowRight className="w-4 h-4" />
+                  <div className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl shrink-0">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

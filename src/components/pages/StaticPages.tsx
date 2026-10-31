@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { supabase } from '../../lib/supabase';
+import { usePageSEO } from '../../utils/seo';
 import {
   ShieldCheck,
   Award,
@@ -20,6 +21,13 @@ import {
 
 export const AboutPage: React.FC = () => {
   const { navigate } = useStore();
+
+  usePageSEO({
+    title: 'About Us – Workout Nutrition | India\'s Authentic Supplement Store',
+    description:
+      'Learn about Workout Nutrition – India\'s trusted sports supplement store. Authentic, lab-tested products from certified brands. Founded on transparency, quality, and fitness education.',
+    keywords: 'about workout nutrition, authentic supplements india, sports nutrition brand, workout nutrition founder',
+  });
 
   const values = [
     { title: 'Authenticity', desc: '100% authorized manufacturer imports with intact holographic verification seals on every unit.' },
@@ -176,48 +184,48 @@ export const AboutPage: React.FC = () => {
         {/* 6. COMMUNITY & TRAINING INTEGRITY - TRUSTED BY NEXT LEVEL FITNESS */}
         <div className="bg-white border border-zinc-200/80 rounded-3xl p-6 sm:p-10 shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            {/* Left: Gym Photo and Partner Card Separated with Individual Hover Behavior */}
-            <div className="lg:col-span-6 space-y-4">
-              {/* Photo Frame with smooth hover zoom */}
-              <div className="group relative rounded-2xl overflow-hidden shadow-md border border-zinc-200/90 bg-zinc-950 aspect-[16/10] card-hover cursor-pointer">
+            {/* Left: Unified Premium Framed Facility Visual with Embedded Partner Badges */}
+            <div className="lg:col-span-6 h-full flex flex-col justify-center">
+              <div className="group relative rounded-3xl overflow-hidden shadow-xl border border-zinc-200/90 bg-zinc-950 min-h-[380px] sm:min-h-[460px] flex flex-col justify-between p-5 sm:p-6 card-hover cursor-pointer">
+                {/* Full Background Facility Image */}
                 <img
-                  src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80"
+                  src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=85"
                   alt="Next Level Fitness gym facility"
-                  className="w-full h-full object-cover brightness-95 group-hover:scale-105 transition-transform duration-500 ease-out"
+                  className="absolute inset-0 w-full h-full object-cover brightness-90 group-hover:scale-105 transition-transform duration-700 ease-out"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/30 pointer-events-none" />
 
-                {/* Location Badge bottom */}
-                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between text-white text-[11px] z-10">
-                  <div className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15">
+                {/* Top Overlay: Facility Location & Verification Pill */}
+                <div className="relative z-10 flex items-center justify-between text-white text-[11px] gap-2">
+                  <div className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-md">
                     <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                    <span className="font-semibold">Galleria Boulevard, Mohali / Punjab</span>
+                    <span className="font-semibold tracking-wide">Sector 119, Balongi, Mohali</span>
                   </div>
-                  <span className="bg-red-600/90 backdrop-blur-sm text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-lg">
+                  <span className="bg-red-600/95 backdrop-blur-md text-white font-bold text-[10px] uppercase px-3 py-1 rounded-full shadow-md">
                     Verified Facility
                   </span>
                 </div>
-              </div>
 
-              {/* Separated Official Partner Trust Card with its own hover behavior */}
-              <div className="p-4 rounded-2xl bg-zinc-950 text-white border border-zinc-800 shadow-lg flex items-center justify-between gap-4 card-hover">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-red-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-red-600/30">
-                    <Dumbbell className="w-5 h-5 -rotate-45" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-heading font-bold text-sm tracking-wide uppercase text-white truncate">
-                      NEXT LEVEL FITNESS
+                {/* Bottom Overlay: Integrated Premium Partner Trust Card */}
+                <div className="relative z-10 p-4 sm:p-5 rounded-2xl bg-zinc-950/85 backdrop-blur-xl text-white border border-white/15 shadow-2xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-red-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-red-600/40">
+                      <Dumbbell className="w-5 h-5 -rotate-45" />
                     </div>
-                    <div className="text-[11px] text-zinc-400 font-medium">
-                      Official Supplement &amp; Nutrition Partner
+                    <div className="min-w-0">
+                      <div className="font-heading font-bold text-sm tracking-wider uppercase text-white truncate">
+                        NEXT LEVEL FITNESS
+                      </div>
+                      <div className="text-[11px] text-zinc-300 font-medium">
+                        Official Supplement &amp; Nutrition Partner
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="text-right shrink-0 pl-3 border-l border-zinc-800">
-                  <div className="text-xs font-bold text-emerald-400">100% PURE</div>
-                  <div className="text-[10px] text-zinc-400">Tested Batches</div>
+                  <div className="text-right shrink-0 pl-3.5 border-l border-zinc-700/80">
+                    <div className="text-xs font-black text-emerald-400 font-mono tracking-tight">100% PURE</div>
+                    <div className="text-[10px] text-zinc-400 uppercase font-mono">Tested Batches</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -289,6 +297,13 @@ export const ContactPage: React.FC = () => {
   const [activeView, setActiveView] = useState<'channels' | 'form'>('channels');
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
+
+  usePageSEO({
+    title: 'Contact Us – Workout Nutrition | Supplements Support & Inquiries',
+    description:
+      'Contact Workout Nutrition for product authenticity queries, order support, wholesale inquiries, or expert supplement stack consultation. Reach us via WhatsApp, email, or phone.',
+    keywords: 'contact workout nutrition, supplement support india, authenticity verification, order tracking support',
+  });
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -433,10 +448,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-zinc-900 text-[13px]">Phone Support</div>
-                  <div className="text-zinc-900 mt-0.5 font-bold text-sm">+91 98765 43210</div>
+                  <div className="text-zinc-900 mt-0.5 font-bold text-sm">+91-8264325436</div>
                   <div className="text-[10px] text-zinc-400 mt-0.5">Toll-free customer hotline</div>
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+918264325436"
                     className="inline-block mt-2 text-[11px] font-bold text-red-600 hover:text-red-700 underline"
                   >
                     Call Now →
@@ -451,10 +466,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-zinc-900 text-[13px]">Email Address</div>
-                  <div className="text-zinc-900 mt-0.5 font-bold truncate">support@workoutnutrition.in</div>
+                  <div className="text-zinc-900 mt-0.5 font-bold truncate">workoutnutrition.inquires@gmail.com</div>
                   <div className="text-[10px] text-zinc-400 mt-0.5">Replies within 4 business hours</div>
                   <a
-                    href="mailto:support@workoutnutrition.in"
+                    href="mailto:workoutnutrition.inquires@gmail.com"
                     className="inline-block mt-2 text-[11px] font-bold text-red-600 hover:text-red-700 underline"
                   >
                     Send Email →
@@ -469,10 +484,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-zinc-900 text-[13px]">WhatsApp Helpdesk</div>
-                  <div className="text-zinc-900 mt-0.5 font-bold text-sm">+91 98765 43210</div>
+                  <div className="text-zinc-900 mt-0.5 font-bold text-sm">+91-8264325436</div>
                   <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">Direct Nutritionist Chat (Fastest)</div>
                   <a
-                    href="https://wa.me/919876543210"
+                    href="https://wa.me/918264325436"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block mt-2 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 underline"
@@ -530,7 +545,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 </div>
               </div>
               <a
-                href="https://wa.me/919876543210?text=Hi%20Workout%20Nutrition,%20I%20need%20urgent%20supplement%20advice"
+                href="https://wa.me/918264325436?text=Hi%20Workout%20Nutrition,%20I%20need%20urgent%20supplement%20advice"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs uppercase px-5 py-2.5 rounded-xl transition-all shadow-md shadow-emerald-600/20 text-center"
@@ -598,7 +613,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
                   <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <a
-                      href={`https://wa.me/919876543210?text=Hi%20Workout%20Nutrition,%20I%20have%20inquiry%20ticket%20${ticketId}`}
+                      href={`https://wa.me/918264325436?text=Hi%20Workout%20Nutrition,%20I%20have%20inquiry%20ticket%20${ticketId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase px-5 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/20"
@@ -650,7 +665,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                         required
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="e.g. +91 98765 43210"
+                        placeholder="e.g. +91-8264325436"
                         className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-3 outline-none focus:border-red-600 focus:bg-white text-zinc-900"
                       />
                     </div>
@@ -749,6 +764,13 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 export const FAQPage: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
+  usePageSEO({
+    title: 'FAQs – Workout Nutrition | Supplement Authenticity, Delivery & Returns',
+    description:
+      'Get answers to frequently asked questions about product authenticity verification, delivery timelines, Cash on Delivery, returns, and banned substance testing at Workout Nutrition.',
+    keywords: 'workout nutrition faq, supplement authenticity questions, delivery india, return policy supplements',
+  });
+
   const faqs = [
     {
       q: 'How can I verify the authenticity of supplements bought on IronForge?',
@@ -815,6 +837,26 @@ export const FAQPage: React.FC = () => {
 };
 
 export const PolicyPage: React.FC<{ type: 'shipping' | 'return' | 'terms' }> = ({ type }) => {
+  const pageSEO = {
+    shipping: {
+      title: 'Shipping & Delivery Policy – Workout Nutrition | Pan-India Fast Delivery',
+      description: 'Workout Nutrition ships all orders within 24 hours. Free shipping on orders above ₹999. Delivered via Delhivery, BlueDart & DTDC across India.',
+      keywords: 'workout nutrition shipping policy, free delivery india, supplement delivery time',
+    },
+    return: {
+      title: 'Returns & Authenticity Guarantee – Workout Nutrition | 7-Day Returns',
+      description: 'Workout Nutrition guarantees 100% product authenticity. Damaged or tamper-evident seal broken products replaced free within 7 days of delivery.',
+      keywords: 'workout nutrition return policy, supplement authenticity guarantee, damaged product return',
+    },
+    terms: {
+      title: 'Terms of Service & Privacy Policy – Workout Nutrition India',
+      description: 'Read Workout Nutrition\'s terms of service and privacy policy. Your personal data is safe, payments are secure, and we do not sell your information.',
+      keywords: 'workout nutrition terms, privacy policy supplements india',
+    },
+  };
+
+  usePageSEO(pageSEO[type]);
+
   return (
     <div className="bg-zinc-50 min-h-screen py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { Product } from '../../types';
 import { productsService } from '../../lib/products.service';
 import { formatCurrency } from '../../utils/formatters';
 import { ProductFormModal } from './ProductFormModal';
+import { AdminOrdersTab } from './AdminOrdersTab';
 import {
   ShieldAlert,
   Plus,
@@ -16,12 +17,12 @@ import {
   Flame,
   RefreshCw,
   AlertTriangle,
-  ShieldCheck,
 } from 'lucide-react';
 
 export const AdminProductsPage: React.FC = () => {
   const { products, refreshProducts, addToast, navigate } = useStore();
-  const { user, profile, isAdmin, openAuthModal, promoteToAdmin } = useAuth();
+  const { user, profile, isAdmin, openAuthModal } = useAuth();
+  const [adminSection, setAdminSection] = useState<'orders' | 'products'>('orders');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -29,27 +30,8 @@ export const AdminProductsPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
 
-  // Ensure Supabase DB profile role is synced as 'admin' when an admin views this page
-  useEffect(() => {
-    if (user && isAdmin && profile?.role !== 'admin') {
-      promoteToAdmin();
-    }
-  }, [user, isAdmin, profile?.role]);
-
-  const handleActivateAdmin = async () => {
-    setIsPromoting(true);
-    const { error } = await promoteToAdmin();
-    setIsPromoting(false);
-    if (error) {
-      addToast('Admin Activation Failed', error.message, 'error');
-    } else {
-      addToast('Admin Access Enabled!', 'Your database role is now set to admin', 'success');
-    }
-  };
-
-  // If not admin, show guard screen with 1-click admin activation for logged-in users
+  // If not admin, show guard screen
   if (!isAdmin) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-6 bg-zinc-50">
@@ -62,26 +44,17 @@ export const AdminProductsPage: React.FC = () => {
           </h2>
           <p className="text-sm text-zinc-600 mt-2 leading-relaxed">
             {user
-              ? `Signed in as ${user.email} (Current role: "${profile?.role || 'customer'}"). Click below to activate Admin privileges in Supabase.`
-              : 'Please sign in with your administrator account to add, edit, or delete products.'}
+              ? `Signed in as ${user.email} (Role: "${profile?.role || 'customer'}"). You do not have administrator permissions.`
+              : 'Please sign in with your administrator account to access product management.'}
           </p>
 
           <div className="mt-6 flex flex-col gap-3">
-            {!user ? (
+            {!user && (
               <button
                 onClick={() => openAuthModal('login', 'Please sign in with your administrator account')}
                 className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-red-600/25 transition-all cursor-pointer"
               >
                 Sign In as Admin
-              </button>
-            ) : (
-              <button
-                onClick={handleActivateAdmin}
-                disabled={isPromoting}
-                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-red-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>{isPromoting ? 'Activating Admin Role...' : 'Activate Admin Role Now'}</span>
               </button>
             )}
             <button
@@ -132,9 +105,6 @@ export const AdminProductsPage: React.FC = () => {
       return;
     }
     setDeletingId(id);
-    if (profile?.role !== 'admin') {
-      await promoteToAdmin();
-    }
     const { error } = await productsService.deleteProduct(id);
     setDeletingId(null);
 
@@ -201,7 +171,39 @@ export const AdminProductsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 bg-zinc-200/70 p-1.5 rounded-2xl max-w-md mb-8">
+          <button
+            type="button"
+            onClick={() => setAdminSection('orders')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              adminSection === 'orders'
+                ? 'bg-white text-zinc-950 shadow-sm'
+                : 'text-zinc-600 hover:text-zinc-950'
+            }`}
+          >
+            <Package className="w-4 h-4 text-purple-600" />
+            <span>Orders & Approvals</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setAdminSection('products')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              adminSection === 'products'
+                ? 'bg-white text-zinc-950 shadow-sm'
+                : 'text-zinc-600 hover:text-zinc-950'
+            }`}
+          >
+            <Edit2 className="w-4 h-4 text-red-600" />
+            <span>Products Catalog</span>
+          </button>
+        </div>
+
+        {adminSection === 'orders' ? (
+          <AdminOrdersTab />
+        ) : (
+          <>
+            {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-sm">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
@@ -423,6 +425,8 @@ export const AdminProductsPage: React.FC = () => {
             </table>
           </div>
         </div>
+        </>
+        )}
 
         {/* Modal */}
         <ProductFormModal

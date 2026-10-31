@@ -187,7 +187,10 @@ export const CartDrawer: React.FC = () => {
 
                     <div className="text-right">
                       <span className="font-mono font-bold text-xs sm:text-sm text-zinc-900 tabular-nums">
-                        {formatCurrency(item.product.price * item.quantity)}
+                        {formatCurrency(
+                          (item.variantPrice !== undefined ? item.variantPrice : item.product.price) *
+                            item.quantity
+                        )}
                       </span>
                     </div>
                   </div>

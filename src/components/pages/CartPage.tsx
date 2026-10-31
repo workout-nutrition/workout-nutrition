@@ -3,8 +3,13 @@ import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatters';
 import { Trash2, Plus, Minus, ArrowRight, ShieldCheck, Truck, ShoppingBag, Tag, Sparkles, Lock } from 'lucide-react';
+import { usePageSEO } from '../../utils/seo';
 
 export const CartPage: React.FC = () => {
+  usePageSEO({
+    title: 'Your Shopping Cart',
+    description: 'Review your selected authentic sports nutrition products, apply discount coupons, and proceed to checkout.',
+  });
   const {
     cart,
     removeFromCart,
@@ -102,7 +107,9 @@ export const CartPage: React.FC = () => {
 
               {/* Items Card */}
               <div className="bg-white border border-zinc-200/80 rounded-2xl divide-y divide-zinc-100 shadow-sm overflow-hidden">
-                {cart.map((item) => (
+                {cart.map((item) => {
+                  const unitPrice = item.variantPrice !== undefined ? item.variantPrice : item.product.price;
+                  return (
                   <div key={item.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-20 h-20 bg-zinc-50 border border-zinc-200 rounded-xl p-2 shrink-0 flex items-center justify-center">
@@ -124,7 +131,7 @@ export const CartPage: React.FC = () => {
                           {item.selectedFlavour} · {item.selectedSize}
                         </div>
                         <div className="font-mono font-bold text-sm text-zinc-900 mt-1 sm:hidden">
-                          {formatCurrency(item.product.price)}
+                          {formatCurrency(unitPrice)}
                         </div>
                       </div>
                     </div>
@@ -150,7 +157,7 @@ export const CartPage: React.FC = () => {
                       </div>
 
                       <div className="font-mono font-bold text-base text-zinc-950 tabular-nums hidden sm:block">
-                        {formatCurrency(item.product.price * item.quantity)}
+                        {formatCurrency(unitPrice * item.quantity)}
                       </div>
 
                       <button
@@ -162,7 +169,8 @@ export const CartPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             </div>
 

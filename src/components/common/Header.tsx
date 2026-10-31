@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { CategoriesMegaMenu } from './CategoriesMegaMenu';
 import { GOALS } from '../../data/goals';
-
 import {
   Search,
   User,
@@ -23,7 +23,6 @@ import {
   ArrowRight,
   ShieldAlert,
   LogOut,
-  LogIn,
 } from 'lucide-react';
 
 const LOGO_PATH = '/products/logo.png';
@@ -38,7 +37,7 @@ export const Header: React.FC = () => {
     wishlist,
   } = useStore();
 
-  const { user, profile, isAdmin, openAuthModal, signOut } = useAuth();
+  const { user, isAdmin, openAuthModal, signOut } = useAuth();
 
   const [visible, setVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -67,16 +66,11 @@ export const Header: React.FC = () => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prevScrollY]);
 
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
 
     return () => {
       document.body.style.overflow = '';
@@ -91,16 +85,10 @@ export const Header: React.FC = () => {
 
   const navButtonClass = (active: boolean) =>
     `px-3.5 py-1.5 rounded-full transition-all cursor-pointer hover:text-red-600 hover:bg-zinc-100/70 ${
-      active
-        ? 'bg-red-50 text-red-600 font-semibold'
-        : 'text-zinc-700'
+      active ? 'bg-red-50 text-red-600 font-semibold' : 'text-zinc-700'
     }`;
 
-  const LogoImage = ({
-    mobile = false,
-  }: {
-    mobile?: boolean;
-  }) => (
+  const LogoImage = ({ mobile = false }: { mobile?: boolean }) => (
     <img
       src={LOGO_PATH}
       alt="Workout Nutrition"
@@ -117,11 +105,7 @@ export const Header: React.FC = () => {
 
   const BrandText = ({ mobile = false }: { mobile?: boolean }) => (
     <div className="min-w-0">
-      <div
-        className={`flex items-baseline ${
-          mobile ? 'leading-none' : ''
-        }`}
-      >
+      <div className={`flex items-baseline ${mobile ? 'leading-none' : ''}`}>
         <span
           className={`font-display font-normal tracking-wide text-zinc-950 uppercase ${
             mobile ? 'text-xs sm:text-sm' : 'text-xl tracking-wider'
@@ -129,7 +113,6 @@ export const Header: React.FC = () => {
         >
           WORKOUT
         </span>
-
         <span
           className={`font-display font-normal tracking-wide text-red-600 ml-1 uppercase ${
             mobile ? 'text-xs sm:text-sm' : 'text-xl tracking-wider'
@@ -141,14 +124,10 @@ export const Header: React.FC = () => {
 
       <div
         className={`font-medium tracking-widest uppercase text-zinc-400 ${
-          mobile
-            ? 'text-[7px] mt-0.5 truncate'
-            : 'text-[8px] -mt-0.5'
+          mobile ? 'text-[7px] mt-0.5 truncate' : 'text-[8px] -mt-0.5'
         }`}
       >
-        {mobile
-          ? 'AUTHENTIC SUPPLEMENTS'
-          : 'AUTHENTIC SPORTS SUPPLEMENTS'}
+        {mobile ? 'AUTHENTIC SUPPLEMENTS' : 'AUTHENTIC SPORTS SUPPLEMENTS'}
       </div>
     </div>
   );
@@ -167,88 +146,67 @@ export const Header: React.FC = () => {
   );
 
   const mobileCategories = [
-    {
-      slug: 'whey-protein',
-      label: 'Whey Protein',
-      desc: 'Fast-absorbing protein',
-    },
-    {
-      slug: 'whey-isolate',
-      label: 'Whey Isolate',
-      desc: 'High purity isolate',
-    },
-    {
-      slug: 'creatine',
-      label: 'Creatine',
-      desc: 'Strength and power',
-    },
-    {
-      slug: 'pre-workout',
-      label: 'Pre-Workout',
-      desc: 'Energy and pump',
-    },
-    {
-      slug: 'mass-gainer',
-      label: 'Mass Gainer',
-      desc: 'High-calorie blends',
-    },
-    {
-      slug: 'fish-oil',
-      label: 'Fish Oil',
-      desc: 'Omega-3 support',
-    },
-    {
-      slug: 'multivitamins',
-      label: 'Multivitamins',
-      desc: 'Vitamins and minerals',
-    },
+    { slug: 'whey-protein', label: 'Whey Protein', desc: 'Fast-absorbing protein' },
+    { slug: 'whey-isolate', label: 'Whey Isolate', desc: 'High purity isolate' },
+    { slug: 'creatine', label: 'Creatine', desc: 'Strength and power' },
+    { slug: 'pre-workout', label: 'Pre-Workout', desc: 'Energy and pump' },
+    { slug: 'mass-gainer', label: 'Mass Gainer', desc: 'High-calorie blends' },
+    { slug: 'fish-oil', label: 'Fish Oil', desc: 'Omega-3 support' },
+    { slug: 'multivitamins', label: 'Multivitamins', desc: 'Vitamins and minerals' },
   ];
 
   const mobileBrands = [
+    { slug: 'muscleblaze', name: 'MuscleBlaze', origin: 'India', desc: 'Sports nutrition products' },
+    { slug: 'optimum-nutrition', name: 'Optimum Nutrition', origin: 'USA', desc: 'Gold Standard range' },
+    { slug: 'dymatize', name: 'Dymatize', origin: 'USA', desc: 'Protein supplements' },
+    { slug: 'muscletech', name: 'MuscleTech', origin: 'USA', desc: 'Performance nutrition' },
+    { slug: 'bsn', name: 'BSN', origin: 'USA', desc: 'Sports supplements' },
+    { slug: 'applied-nutrition', name: 'Applied Nutrition', origin: 'UK', desc: 'Workout nutrition' },
+  ];
+
+  const mobilePages = [
     {
-      slug: 'muscleblaze',
-      name: 'MuscleBlaze',
-      origin: 'India',
-      desc: 'Sports nutrition products',
+      page: 'track-order',
+      title: 'Track Live Order',
+      desc: 'Courier and dispatch status',
+      icon: <Truck className="w-4 h-4" />,
     },
     {
-      slug: 'optimum-nutrition',
-      name: 'Optimum Nutrition',
-      origin: 'USA',
-      desc: 'Gold Standard range',
+      page: 'about',
+      title: 'About Us',
+      desc: 'About our store',
+      icon: <ShieldCheck className="w-4 h-4" />,
     },
     {
-      slug: 'dymatize',
-      name: 'Dymatize',
-      origin: 'USA',
-      desc: 'Protein supplements',
+      page: 'our-gym',
+      title: 'Our Gym',
+      desc: 'Explore Next Level Fitness',
+      icon: <Dumbbell className="w-4 h-4" />,
     },
     {
-      slug: 'muscletech',
-      name: 'MuscleTech',
-      origin: 'USA',
-      desc: 'Performance nutrition',
+      page: 'contact',
+      title: 'Contact Us',
+      desc: 'Support and enquiries',
+      icon: <Phone className="w-4 h-4" />,
     },
     {
-      slug: 'bsn',
-      name: 'BSN',
-      origin: 'USA',
-      desc: 'Sports supplements',
+      page: 'faq',
+      title: 'FAQs and Guidance',
+      desc: 'Shipping, payment and orders',
+      icon: <HelpCircle className="w-4 h-4" />,
     },
     {
-      slug: 'applied-nutrition',
-      name: 'Applied Nutrition',
-      origin: 'UK',
-      desc: 'Workout nutrition',
+      page: 'account',
+      title: user ? 'My Account' : 'Sign In / Register',
+      desc: user ? user.email || 'View profile' : 'Login to save orders',
+      icon: <User className="w-4 h-4" />,
     },
   ];
 
   return (
     <header
       className={`sticky top-0 z-40 w-full px-2.5 sm:px-6 pt-2 pb-2 md:pt-2.5 md:pb-2 transition-all duration-300 ease-in-out ${
-        visible
-          ? 'translate-y-0 opacity-100'
-          : '-translate-y-full opacity-0'
+        visible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
       }`}
     >
       {/* DESKTOP NAVBAR */}
@@ -263,19 +221,12 @@ export const Header: React.FC = () => {
           <div className="flex items-center justify-between gap-4">
             <LogoButton />
 
-            {/* DESKTOP LINKS */}
             <nav className="flex items-center gap-1 lg:gap-1.5 text-xs lg:text-[13px] font-medium">
-              <button
-                onClick={() => handleNavClick('home')}
-                className={navButtonClass(currentPage === 'home')}
-              >
+              <button onClick={() => handleNavClick('home')} className={navButtonClass(currentPage === 'home')}>
                 Home
               </button>
 
-              <button
-                onClick={() => handleNavClick('shop')}
-                className={navButtonClass(currentPage === 'shop')}
-              >
+              <button onClick={() => handleNavClick('shop')} className={navButtonClass(currentPage === 'shop')}>
                 Shop
               </button>
 
@@ -285,12 +236,8 @@ export const Header: React.FC = () => {
                 onMouseLeave={() => setCategoriesMenuOpen(false)}
               >
                 <button
-                  onClick={() =>
-                    setCategoriesMenuOpen((open) => !open)
-                  }
-                  className={navButtonClass(
-                    categoriesMenuOpen || currentPage === 'category'
-                  )}
+                  onClick={() => setCategoriesMenuOpen((open) => !open)}
+                  className={navButtonClass(categoriesMenuOpen || currentPage === 'category')}
                   aria-expanded={categoriesMenuOpen}
                 >
                   Categories
@@ -303,29 +250,24 @@ export const Header: React.FC = () => {
 
                 {categoriesMenuOpen && (
                   <div className="fixed left-0 right-0 top-[58px] z-50">
-                    <CategoriesMegaMenu
-                      onClose={() => setCategoriesMenuOpen(false)}
-                    />
+                    <CategoriesMegaMenu onClose={() => setCategoriesMenuOpen(false)} />
                   </div>
                 )}
               </div>
 
-              <button
-                onClick={() => handleNavClick('about')}
-                className={navButtonClass(currentPage === 'about')}
-              >
+              <button onClick={() => handleNavClick('about')} className={navButtonClass(currentPage === 'about')}>
                 About Us
               </button>
 
-              <button
-                onClick={() => handleNavClick('contact')}
-                className={navButtonClass(currentPage === 'contact')}
-              >
+              <button onClick={() => handleNavClick('our-gym')} className={navButtonClass(currentPage === 'our-gym')}>
+                Our Gym
+              </button>
+
+              <button onClick={() => handleNavClick('contact')} className={navButtonClass(currentPage === 'contact')}>
                 Contact
               </button>
             </nav>
 
-            {/* DESKTOP ACTION ICONS */}
             <div className="flex items-center gap-1.5 shrink-0">
               {isAdmin && (
                 <button
@@ -352,11 +294,8 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => {
-                  if (user) {
-                    handleNavClick('account');
-                  } else {
-                    openAuthModal('login');
-                  }
+                  if (user) handleNavClick('account');
+                  else openAuthModal('login');
                 }}
                 aria-label="My account"
                 className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
@@ -375,7 +314,6 @@ export const Header: React.FC = () => {
                 className="relative w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-red-600 flex items-center justify-center transition-all cursor-pointer"
               >
                 <Heart className="w-4 h-4" />
-
                 {wishlist.length > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-600 text-white font-bold text-[9px] flex items-center justify-center">
                     {wishlist.length}
@@ -417,8 +355,7 @@ export const Header: React.FC = () => {
               >
                 <Menu className="w-5 h-5" />
               </button>
-
-              <LogoButton mobile={true} />
+              <LogoButton mobile />
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
@@ -441,11 +378,8 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => {
-                  if (user) {
-                    handleNavClick('account');
-                  } else {
-                    openAuthModal('login');
-                  }
+                  if (user) handleNavClick('account');
+                  else openAuthModal('login');
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   user ? 'bg-red-50 text-red-600' : 'bg-zinc-100 text-zinc-700'
@@ -480,11 +414,11 @@ export const Header: React.FC = () => {
             <div className="relative w-[85%] max-w-[340px] bg-white h-full shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-left duration-300">
               {/* DRAWER HEADER */}
               <div className="p-4 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-zinc-50">
-                <LogoButton mobile={true} />
-
+                <LogoButton mobile />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-8 h-8 rounded-lg bg-zinc-200/70 hover:bg-zinc-200 flex items-center justify-center text-zinc-600"
+                  aria-label="Close menu"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -544,38 +478,7 @@ export const Header: React.FC = () => {
                       </button>
                     )}
 
-                    {[
-                      {
-                        page: 'track-order',
-                        title: 'Track Live Order',
-                        desc: 'Courier and dispatch status',
-                        icon: <Truck className="w-4 h-4" />,
-                      },
-                      {
-                        page: 'contact',
-                        title: 'Contact Us',
-                        desc: 'Support and enquiries',
-                        icon: <Phone className="w-4 h-4" />,
-                      },
-                      {
-                        page: 'about',
-                        title: 'About Us',
-                        desc: 'About our store',
-                        icon: <ShieldCheck className="w-4 h-4" />,
-                      },
-                      {
-                        page: 'faq',
-                        title: 'FAQs and Guidance',
-                        desc: 'Shipping, payment and orders',
-                        icon: <HelpCircle className="w-4 h-4" />,
-                      },
-                      {
-                        page: 'account',
-                        title: user ? 'My Account' : 'Sign In / Register',
-                        desc: user ? (user.email || 'View profile') : 'Login to save orders',
-                        icon: <User className="w-4 h-4" />,
-                      },
-                    ].map((item) => (
+                    {mobilePages.map((item) => (
                       <button
                         key={item.page}
                         onClick={() => {
@@ -622,7 +525,6 @@ export const Header: React.FC = () => {
                       <p className="text-[10px] font-bold uppercase text-zinc-400 mb-2">
                         Quick access
                       </p>
-
                       <div className="grid grid-cols-3 gap-2">
                         {[
                           { page: 'home', label: 'Home' },
@@ -647,7 +549,6 @@ export const Header: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase text-zinc-400">
                       Supplement categories
                     </p>
-
                     <div className="grid grid-cols-2 gap-2">
                       {mobileCategories.map((category) => (
                         <button
@@ -671,7 +572,6 @@ export const Header: React.FC = () => {
                         </button>
                       ))}
                     </div>
-
                     <button
                       onClick={() => handleNavClick('shop')}
                       className="w-full py-3 rounded-xl bg-zinc-950 text-white text-xs font-bold uppercase"
@@ -686,7 +586,6 @@ export const Header: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase text-zinc-400">
                       Brand partners
                     </p>
-
                     {mobileBrands.map((brand) => (
                       <button
                         key={brand.slug}
@@ -713,7 +612,6 @@ export const Header: React.FC = () => {
                         </span>
                       </button>
                     ))}
-
                     <button
                       onClick={() => handleNavClick('shop')}
                       className="w-full py-3 rounded-xl border border-zinc-300 bg-white text-xs font-bold uppercase"
@@ -728,7 +626,6 @@ export const Header: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase text-zinc-400">
                       Shop by fitness goal
                     </p>
-
                     {GOALS.map((goal) => (
                       <button
                         key={goal.id}
@@ -745,9 +642,7 @@ export const Header: React.FC = () => {
                           className="absolute inset-0 w-full h-full object-cover"
                           loading="lazy"
                         />
-
                         <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/85 to-zinc-950/40" />
-
                         <div className="relative z-10 text-white flex items-center justify-between w-full">
                           <div className="min-w-0 pr-2">
                             <div className="text-[9px] font-bold uppercase text-red-400">
@@ -764,7 +659,6 @@ export const Header: React.FC = () => {
                         </div>
                       </button>
                     ))}
-
                     <button
                       onClick={() => handleNavClick('shop')}
                       className="w-full py-3 rounded-xl border border-zinc-300 bg-white text-xs font-bold uppercase flex items-center justify-center gap-2"
@@ -779,7 +673,7 @@ export const Header: React.FC = () => {
               {/* DRAWER FOOTER */}
               <div className="p-3.5 bg-zinc-50 border-t border-zinc-200 space-y-2 shrink-0">
                 <a
-                  href="https://wa.me/919876543210"
+                  href="https://wa.me/918264325436"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase"
@@ -789,11 +683,11 @@ export const Header: React.FC = () => {
                 </a>
 
                 <a
-                  href="tel:18002664554"
+                  href="tel:+918264325436"
                   className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-zinc-700 py-1"
                 >
                   <Phone className="w-3 h-3 text-red-600" />
-                  Toll-Free: 1800-266-4554
+                  Call Us: +91-8264325436
                 </a>
 
                 <div className="flex items-center justify-center gap-1 text-[9px] font-semibold text-zinc-400 uppercase pt-2 border-t border-zinc-200">
